@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { HouseholdMember, MyMembership } from '../types/db';
+import type { HouseholdMember, HouseholdSettings, MyMembership } from '../types/db';
 
 /** The user's active household is their first membership (by joined_at). */
 export async function getMyMembership(): Promise<MyMembership | null> {
@@ -43,4 +43,31 @@ export async function listMembers(householdId: string): Promise<HouseholdMember[
     .order('joined_at', { ascending: true });
   if (error) throw error;
   return (data ?? []) as HouseholdMember[];
+}
+
+export async function getHouseholdSettings(householdId: string): Promise<HouseholdSettings | null> {
+  const { data, error } = await supabase
+    .from('household_settings')
+    .select('household_id, category_defaults')
+    .eq('household_id', householdId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as HouseholdSettings | null) ?? null;
+}
+
+export async function updateCategoryDefaults(
+  householdId: string,
+  defaults: HouseholdSettings['category_defaults'],
+): Promise<void> {
+  const { error } = await supabase
+    .from('household_settings')
+    .update({ category_defaults: defaults })
+    .eq('household_id', householdId);
+  if (error) throw error;
+}
+
+export async function regenerateInviteCode(householdId: string): Promise<string> {
+  const { data, error } = await supabase.rpc('regenerate_invite_code', { p_household_id: householdId });
+  if (error) throw error;
+  return data as string;
 }

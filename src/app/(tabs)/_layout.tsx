@@ -1,10 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
 
+import { useAuth } from '../../auth/AuthProvider';
+import { useRealtimeItems } from '../../data/useRealtimeItems';
 import { nl } from '../../i18n/nl';
+import { registerBackgroundSync } from '../../services/backgroundSync';
+import {
+  setCurrentHousehold,
+  useNotificationTapRouting,
+  useResyncOnActive,
+} from '../../services/notifications';
 import { colors } from '../../theme';
 
 export default function TabsLayout() {
+  const { household } = useAuth();
+  const hid = household?.id ?? null;
+
+  useEffect(() => {
+    setCurrentHousehold(hid);
+    if (hid) void registerBackgroundSync();
+  }, [hid]);
+  useRealtimeItems(hid);
+  useResyncOnActive(hid);
+  useNotificationTapRouting();
+
   return (
     <Tabs
       screenOptions={{

@@ -1,56 +1,52 @@
-# Welcome to your Expo app 👋
+# Open Fridge
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An Android app for tracking what's in a shared household fridge. You scan a product's barcode, take a photo and set its expiry date, and the app warns you before something goes off. Fresh produce and opened packages are tracked by how long they've been in the fridge or open. The app's UI is in Dutch.
 
-## Get started
+## 1. Supabase (one-time setup)
 
-1. Install dependencies
+1. Create a free project at <https://supabase.com>.
+2. Open **SQL Editor**, paste the whole of `supabase/migrations/0001_init.sql`, and click **Run**. This creates the tables, the security rules (row-level security), and the private `photos` bucket.
+3. Go to **Project Settings → API** and copy the **Project URL** and the **publishable / anon key**.
+4. Copy `.env.example` to `.env` and fill both values in. The anon key is meant to sit in the app; the database rules protect your data. Never put the `service_role` key in the app.
+5. Optional: if you don't want to confirm accounts by email, turn off **Authentication → Sign In / Providers → Email → Confirm email**.
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## 2. Run on your phone (development)
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Install **Expo Go** from the Play Store, then scan the QR code (phone and PC must be on the same Wi-Fi). If a firewall blocks it, use `npx expo start --tunnel`.
 
-### Other setup steps
+Expo Go is fine for trying out scanning, the list and sharing. Background re-sync does not run in Expo Go, and notifications are limited there, so test notifications with the APK (step 3).
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## 3. Installable APK
 
-## Learn more
+```bash
+npm install -g eas-cli
+eas login
 
-To learn more about developing your project with Expo, look at the following resources:
+eas build -p android --profile preview
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+`eas.json` is already set up so the `preview` profile builds an APK. Builds run in the cloud, and EAS asks you to set the `.env` values as EAS environment variables (`eas env:create`).
 
-## Join the community
+## How it works
 
-Join our community of developers creating universal apps.
+- **Households:** the first person creates one, and the others join with the 6-character code shown under *Instellingen*.
+- **Expiry:** the earliest of three dates counts:
+  - the printed date
+  - the opened date plus the "houdbaar na openen" days
+  - for products without a printed date, the date added plus the "vers" days
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+  Defaults per category can be changed in *Instellingen*.
+- **Notifications** are local on each phone. They're scheduled at your chosen hour, *n* days before an item expires and again on its last day. They re-sync whenever the app opens, whenever a household member changes something (realtime), and about every 12 hours in the background.
+
+## Development
+
+```bash
+npm test
+npx tsc --noEmit
+npx expo-doctor
+```
