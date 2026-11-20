@@ -44,6 +44,17 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "d1cc6e1e-399c-4821-af2b-f0607fe8926b"
+      }
+    },
+    "owner": "opivankristovi"
   }
 }
