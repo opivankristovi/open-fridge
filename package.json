@@ -1,6 +1,7 @@
 {
   "name": "open-fridge",
   "version": "1.0.0",
+  "license": "GPL-3.0-or-later",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/ui": "~58.0.29",
