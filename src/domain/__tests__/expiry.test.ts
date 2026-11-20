@@ -9,7 +9,7 @@ import {
   parseLocalDate,
   type ExpiryInput,
 } from '../expiry';
-import { categoryFromOff, shelfDefaults } from '../categories';
+import { CATEGORIES, categoryFromOff, shelfDefaults } from '../categories';
 
 const now = new Date(2026, 10, 17, 10, 0); // 17 nov 2026, 10:00 local
 
@@ -84,6 +84,33 @@ describe('effectiveExpiry', () => {
   it('opened without opened_shelf_days is ignored', () => {
     expect(
       effectiveExpiry(item({ opened_at: new Date(2026, 10, 16).toISOString() })),
+    ).toBeNull();
+  });
+  it('opened with null days keeps the printed date leading', () => {
+    const e = effectiveExpiry(
+      item({
+        expiry_date: '2026-12-01',
+        opened_at: new Date(2026, 10, 16).toISOString(),
+        opened_shelf_days: null,
+      }),
+    )!;
+    expect(e.rule).toBe('printed');
+    expect(e.date).toEqual(new Date(2026, 11, 1));
+  });
+  it('opened with null days keeps the fresh rule leading', () => {
+    const e = effectiveExpiry(
+      item({
+        fresh_shelf_days: 5,
+        opened_at: new Date(2026, 10, 16).toISOString(),
+        opened_shelf_days: null,
+      }),
+    )!;
+    expect(e.rule).toBe('fresh');
+    expect(e.date).toEqual(new Date(2026, 10, 20));
+  });
+  it('opened with null days and no other rule -> no expiry', () => {
+    expect(
+      effectiveExpiry(item({ opened_at: new Date(2026, 10, 16).toISOString(), opened_shelf_days: null })),
     ).toBeNull();
   });
   it('nothing -> null / onbekend', () => {
@@ -182,8 +209,24 @@ describe('categories', () => {
   it('cheese beats dairy', () => {
     expect(categoryFromOff(['en:dairies', 'en:cheeses'])).toBe('kaas');
   });
+  it('shelfDefaults returns the new category defaults', () => {
+    expect(shelfDefaults('vlees')).toEqual({ fresh: 2, opened: 3 });
+    expect(shelfDefaults('sauzen')).toEqual({ fresh: 5, opened: null });
+    expect(shelfDefaults('restjes')).toEqual({ fresh: 3, opened: null });
+    expect(CATEGORIES.restjes.canOpen).toBe(false);
+    expect(CATEGORIES.kaas.canOpen).toBe(true);
+  });
   it('shelfDefaults applies overrides', () => {
-    expect(shelfDefaults('vlees')).toEqual({ fresh: 2, opened: 2 });
-    expect(shelfDefaults('vlees', { vlees: { fresh: 3 } })).toEqual({ fresh: 3, opened: 2 });
+    expect(shelfDefaults('vlees', { vlees: { fresh: 3 } })).toEqual({ fresh: 3, opened: 3 });
+    expect(shelfDefaults('vlees', { vlees: { opened: 6 } })).toEqual({ fresh: 2, opened: 6 });
+  });
+  it('shelfDefaults: explicit null override differs from absent / undefined', () => {
+    expect(shelfDefaults('vlees', { vlees: { opened: null } })).toEqual({ fresh: 2, opened: null });
+    expect(shelfDefaults('vlees', { vlees: { opened: undefined } })).toEqual({ fresh: 2, opened: 3 });
+    expect(shelfDefaults('vlees', { vlees: {} })).toEqual({ fresh: 2, opened: 3 });
+    expect(shelfDefaults('vlees', {})).toEqual({ fresh: 2, opened: 3 });
+    expect(shelfDefaults('vlees', null)).toEqual({ fresh: 2, opened: 3 });
+    // null default overridden with a number
+    expect(shelfDefaults('sauzen', { sauzen: { opened: 7 } })).toEqual({ fresh: 5, opened: 7 });
   });
 });

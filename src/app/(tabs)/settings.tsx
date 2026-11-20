@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Share, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '../../auth/AuthProvider';
+import { OpenedShelfInput } from '../../components/OpenedShelfInput';
 import { Stepper } from '../../components/Stepper';
-import { Button, Card, ErrorText, Screen, Subtitle } from '../../components/ui';
+import { Button, Card, ErrorText, LinkText, Screen, Subtitle } from '../../components/ui';
 import { regenerateInviteCode } from '../../data/householdRepo';
 import { useHouseholdSettings, useMembers, useUpdateCategoryDefaults } from '../../data/hooks';
 import { usePrefs } from '../../data/localPrefs';
@@ -49,9 +50,19 @@ export default function SettingsScreen() {
     if (!dirty.current && settings.data) setDefaults(settings.data.category_defaults ?? {});
   }, [settings.data]);
 
-  const changeDefault = (cat: CategoryKey, field: 'fresh' | 'opened', value: number) => {
+  const changeDefault = (cat: CategoryKey, field: 'fresh' | 'opened', value: number | null) => {
     const current = shelfDefaults(cat, defaults);
-    const next: Defaults = { ...defaults, [cat]: { fresh: current.fresh, opened: current.opened, [field]: value } };
+    // An explicit null for `opened` is kept on purpose: it means "tot datum op verpakking".
+    persist({ ...defaults, [cat]: { fresh: current.fresh, opened: current.opened, [field]: value } });
+  };
+
+  const resetDefault = (cat: CategoryKey) => {
+    const rest = { ...defaults };
+    delete rest[cat];
+    persist(rest);
+  };
+
+  const persist = (next: Defaults) => {
     dirty.current = true;
     setDefaults(next);
     if (timer.current) clearTimeout(timer.current);
@@ -120,7 +131,7 @@ export default function SettingsScreen() {
         : nl.settings.permissionUndetermined;
 
   return (
-    <Screen>
+    <Screen bottomInset={false}>
       <Card>
         <Text style={styles.heading}>{nl.settings.notifications}</Text>
         <Subtitle>{nl.settings.notificationsHint}</Subtitle>
@@ -160,6 +171,12 @@ export default function SettingsScreen() {
       <Card>
         <Text style={styles.heading}>{nl.settings.shelfLife}</Text>
         <Subtitle>{nl.settings.shelfLifeHint}</Subtitle>
+        <Text style={styles.explain}>
+          <Text style={styles.bold}>{nl.settings.explainFreshLabel}</Text>
+          {nl.settings.explainFresh}
+          <Text style={styles.bold}>{nl.settings.explainOpenedLabel}</Text>
+          {nl.settings.explainOpened}
+        </Text>
         {KEYS.map((cat) => {
           const d = shelfDefaults(cat, defaults);
           return (
@@ -169,10 +186,19 @@ export default function SettingsScreen() {
                 <Text style={styles.catLabel}>{nl.settings.fresh}</Text>
                 <Stepper value={d.fresh} min={0} max={365} onChange={(n) => changeDefault(cat, 'fresh', n)} />
               </View>
-              <View style={styles.catRow}>
-                <Text style={styles.catLabel}>{nl.settings.opened}</Text>
-                <Stepper value={d.opened} min={0} max={365} onChange={(n) => changeDefault(cat, 'opened', n)} />
-              </View>
+              {CATEGORIES[cat].canOpen ? (
+                <View style={styles.catBlockInner}>
+                  <Text style={styles.catLabel}>{nl.settings.opened}</Text>
+                  <OpenedShelfInput
+                    value={d.opened}
+                    onChange={(n) => changeDefault(cat, 'opened', n)}
+                    fallbackDays={CATEGORIES[cat].opened ?? 3}
+                  />
+                </View>
+              ) : null}
+              {defaults[cat] ? (
+                <LinkText title={nl.settings.resetDefault} onPress={() => resetDefault(cat)} />
+              ) : null}
             </View>
           );
         })}
@@ -221,6 +247,9 @@ const styles = StyleSheet.create({
   info: { fontSize: 14, color: colors.primaryDark },
   catBlock: { gap: spacing.sm, paddingTop: spacing.sm },
   catName: { fontSize: 15, fontWeight: '700', color: colors.text },
+  explain: { fontSize: 13, color: colors.textMuted, lineHeight: 19 },
+  bold: { fontWeight: '800', color: colors.text },
+  catBlockInner: { gap: spacing.sm },
   catRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   catLabel: { fontSize: 13, color: colors.textMuted, flexShrink: 1 },
   householdName: { fontSize: 22, fontWeight: '700', color: colors.text },

@@ -4,6 +4,7 @@ import { randomUUID } from 'expo-crypto';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../auth/AuthProvider';
 import { CategoryChips } from '../components/CategoryChips';
@@ -33,6 +34,7 @@ const STEPS: Exclude<Step, 'save'>[] = ['scan', 'details', 'photo', 'expiry'];
 const BARCODE_RE = /^[0-9]{6,14}$/;
 
 export default function AddScreen() {
+  const insets = useSafeAreaInsets();
   const { household } = useAuth();
   const hid = household?.id as string;
   const settings = useHouseholdSettings();
@@ -234,7 +236,7 @@ export default function AddScreen() {
   const stepIndex = STEPS.indexOf(step === 'save' ? 'expiry' : step);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
@@ -319,7 +321,7 @@ export default function AddScreen() {
 
       {step === 'expiry' || step === 'save' ? (
         <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-          {expiry ? <ExpiryForm value={expiry} onChange={setExpiry} /> : null}
+          {expiry ? <ExpiryForm value={expiry} onChange={setExpiry} category={category} /> : null}
           <ErrorText message={error} />
           <Button title={step === 'save' ? nl.add.saving : nl.add.save} onPress={save} loading={step === 'save'} />
         </ScrollView>

@@ -85,7 +85,7 @@ export async function updateItem(id: string, patch: ItemPatch): Promise<Item> {
   return data as Item;
 }
 
-export async function markOpened(id: string, shelfDays: number): Promise<Item> {
+export async function markOpened(id: string, shelfDays: number | null): Promise<Item> {
   return updateItem(id, { opened_at: new Date().toISOString(), opened_shelf_days: shelfDays });
 }
 

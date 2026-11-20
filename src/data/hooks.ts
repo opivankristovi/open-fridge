@@ -119,7 +119,7 @@ export function useUpdateItem() {
 export function useMarkOpened() {
   const after = useAfterItemChange();
   return useMutation({
-    mutationFn: ({ id, shelfDays }: { id: string; shelfDays: number }) => markOpened(id, shelfDays),
+    mutationFn: ({ id, shelfDays }: { id: string; shelfDays: number | null }) => markOpened(id, shelfDays),
     onSuccess: after,
   });
 }

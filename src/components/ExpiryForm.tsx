@@ -1,13 +1,16 @@
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { addDays, differenceInCalendarDays } from 'date-fns';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { shelfDefaults, type CategoryKey, type CategoryOverrides } from '../domain/categories';
+import { useHouseholdSettings } from '../data/hooks';
+import { CATEGORIES, shelfDefaults, type CategoryKey, type CategoryOverrides } from '../domain/categories';
 import { describeDaysLeft, effectiveExpiry, parseLocalDate, type ExpiryInput } from '../domain/expiry';
 import { formatLongDate, formatYmd, toYmd } from '../domain/format';
 import { nl } from '../i18n/nl';
 import { colors, radius, spacing } from '../theme';
 import type { Item } from '../types/db';
+import { OpenedShelfInput } from './OpenedShelfInput';
 import { Stepper } from './Stepper';
 
 export type ExpiryValue = {
@@ -16,7 +19,8 @@ export type ExpiryValue = {
   expiryDate: string;
   freshDays: number;
   opened: boolean;
-  openedDays: number;
+  /** null = until the date printed on the package */
+  openedDays: number | null;
 };
 
 export type ExpiryFields = Pick<
@@ -70,9 +74,17 @@ type Props = {
   /** Used for the live preview of "fresh" items. Defaults to now. */
   addedAt?: string;
   openedAt?: string | null;
+  category: CategoryKey;
 };
 
-export function ExpiryForm({ value, onChange, addedAt, openedAt }: Props) {
+export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Props) {
+  const settings = useHouseholdSettings();
+  const canOpen = CATEGORIES[category].canOpen;
+  const fallbackDays =
+    shelfDefaults(category, settings.data?.category_defaults).opened ?? 3;
+  useEffect(() => {
+    if (!canOpen && value.opened) onChange({ ...value, opened: false });
+  }, [canOpen, value, onChange]);
   const set = (patch: Partial<ExpiryValue>) => onChange({ ...value, ...patch });
 
   const openPicker = () => {
@@ -129,19 +141,30 @@ export function ExpiryForm({ value, onChange, addedAt, openedAt }: Props) {
         </View>
       )}
 
-      <View style={styles.switchRow}>
-        <Text style={styles.label}>{nl.expiry.alreadyOpened}</Text>
-        <Switch
-          value={value.opened}
-          onValueChange={(v) => set({ opened: v })}
-          trackColor={{ true: colors.primary, false: colors.border }}
-        />
-      </View>
-      {value.opened ? (
-        <View style={styles.block}>
-          <Text style={styles.label}>{nl.expiry.openedDays}</Text>
-          <Stepper value={value.openedDays} min={0} max={3650} onChange={(n) => set({ openedDays: n })} />
-        </View>
+      {canOpen ? (
+        <>
+          <View style={styles.switchRow}>
+            <Text style={styles.label}>{nl.expiry.alreadyOpened}</Text>
+            <Switch
+              value={value.opened}
+              onValueChange={(v) => set({ opened: v })}
+              trackColor={{ true: colors.primary, false: colors.border }}
+            />
+          </View>
+          {value.opened ? (
+            <View style={styles.block}>
+              <Text style={styles.label}>{nl.expiry.openedDays}</Text>
+              <OpenedShelfInput
+                value={value.openedDays}
+                onChange={(n) => set({ openedDays: n })}
+                fallbackDays={fallbackDays}
+              />
+              {value.mode === 'fresh' && value.openedDays === null ? (
+                <Text style={styles.hint}>{nl.expiry.openedNullHint}</Text>
+              ) : null}
+            </View>
+          ) : null}
+        </>
       ) : null}
 
       <View style={styles.preview}>
@@ -178,6 +201,7 @@ const styles = StyleSheet.create({
   },
   dateText: { fontSize: 16, color: colors.text },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
+  hint: { fontSize: 13, color: colors.textMuted },
   preview: { backgroundColor: colors.primaryLight, borderRadius: radius.md, padding: spacing.md },
   previewText: { fontSize: 15, fontWeight: '600', color: colors.primaryDark },
 });

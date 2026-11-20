@@ -30,7 +30,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
   if (error) throw error;
 }
 
-export async function setProductOpenedDays(hid: string, barcode: string, days: number): Promise<void> {
+export async function setProductOpenedDays(hid: string, barcode: string, days: number | null): Promise<void> {
   const { error } = await supabase
     .from('household_products')
     .update({ last_opened_shelf_days: days })

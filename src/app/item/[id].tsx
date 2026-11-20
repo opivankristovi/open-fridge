@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ItemImage } from '../../components/ItemImage';
 import { StatusBadge } from '../../components/StatusBadge';
-import { Stepper } from '../../components/Stepper';
+import { OpenedShelfInput } from '../../components/OpenedShelfInput';
 import { Button, Card, ErrorText, Spinner } from '../../components/ui';
 import {
   useDeleteItem,
@@ -37,21 +38,20 @@ export default function ItemDetailScreen() {
   const settings = useHouseholdSettings();
   const product = useProduct(item.data?.barcode);
   const { prefs } = usePrefs();
+  const insets = useSafeAreaInsets();
 
   const markOpened = useMarkOpened();
   const removeItem = useRemoveItem();
   const deleteItem = useDeleteItem();
 
   const [showOpen, setShowOpen] = useState(false);
-  const [openDays, setOpenDays] = useState(3);
+  const [openDays, setOpenDays] = useState<number | null>(3);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const data = item.data;
-  const defaultOpenDays = data
-    ? (product.data?.last_opened_shelf_days ??
-      shelfDefaults(data.category, settings.data?.category_defaults).opened)
-    : 3;
+  const categoryOpened = data ? shelfDefaults(data.category, settings.data?.category_defaults).opened : 3;
+  const defaultOpenDays = data ? (product.data?.last_opened_shelf_days ?? categoryOpened) : 3;
   useEffect(() => {
     setOpenDays(defaultOpenDays);
   }, [defaultOpenDays]);
@@ -113,7 +113,7 @@ export default function ItemDetailScreen() {
     ]);
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, { paddingBottom: spacing.md + insets.bottom }]}>
       <ItemImage item={data} size={240} fill />
 
       <View style={styles.titleBlock}>
@@ -134,15 +134,19 @@ export default function ItemDetailScreen() {
           {nl.item.addedBy(formatShortDate(data.added_at), adder, dagen(daysInFridge(data)))}
         </Text>
         {data.opened_at && opened !== null ? (
-          <Text style={styles.meta}>{nl.item.openedOn(formatShortDate(data.opened_at), dagen(opened))}</Text>
+          <Text style={styles.meta}>
+            {data.opened_shelf_days === null
+              ? nl.item.openedUntilPackage(formatShortDate(data.opened_at))
+              : nl.item.openedOn(formatShortDate(data.opened_at), dagen(opened))}
+          </Text>
         ) : null}
       </Card>
 
-      {!data.opened_at ? (
+      {!data.opened_at && CATEGORIES[data.category].canOpen ? (
         showOpen ? (
           <Card>
             <Text style={styles.label}>{nl.item.openedPanelTitle}</Text>
-            <Stepper value={openDays} min={0} max={3650} onChange={setOpenDays} />
+            <OpenedShelfInput value={openDays} onChange={setOpenDays} fallbackDays={categoryOpened ?? 3} />
             <Button title={nl.item.confirmOpened} onPress={confirmOpened} loading={busy} />
             <Button title={nl.common.cancel} variant="outline" onPress={() => setShowOpen(false)} disabled={busy} />
           </Card>

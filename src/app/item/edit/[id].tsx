@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryChips } from '../../../components/CategoryChips';
 import {
@@ -28,6 +29,7 @@ export default function EditItemScreen() {
   const settings = useHouseholdSettings();
   const updateItem = useUpdateItem();
   const qc = useQueryClient();
+  const insets = useSafeAreaInsets();
 
   const data = item.data;
   const [ready, setReady] = useState(false);
@@ -64,7 +66,7 @@ export default function EditItemScreen() {
 
   if (capturing) {
     return (
-      <View style={styles.capture}>
+      <View style={[styles.capture, { paddingBottom: spacing.md + insets.bottom }]}>
         <PhotoCapture
           onUse={(uri) => {
             setNewPhoto(uri);
@@ -110,7 +112,10 @@ export default function EditItemScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={[styles.content, { paddingBottom: spacing.md + insets.bottom }]}
+      keyboardShouldPersistTaps="handled"
+    >
       <Text style={styles.label}>{nl.edit.currentPhoto}</Text>
       {newPhoto ? (
         <Image source={{ uri: newPhoto }} style={styles.preview} contentFit="cover" />
@@ -126,7 +131,7 @@ export default function EditItemScreen() {
       <Text style={styles.label}>{nl.add.quantity}</Text>
       <Stepper value={quantity} min={1} max={999} onChange={setQuantity} />
 
-      <ExpiryForm value={expiry} onChange={setExpiry} addedAt={data.added_at} openedAt={data.opened_at} />
+      <ExpiryForm value={expiry} onChange={setExpiry} addedAt={data.added_at} openedAt={data.opened_at} category={category} />
 
       <ErrorText message={error} />
       <Button title={nl.edit.save} onPress={save} loading={saving} />

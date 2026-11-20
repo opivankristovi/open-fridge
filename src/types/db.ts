@@ -56,7 +56,7 @@ export type HouseholdProduct = {
 
 export type HouseholdSettings = {
   household_id: string;
-  category_defaults: Partial<Record<CategoryKey, { fresh?: number; opened?: number }>>;
+  category_defaults: Partial<Record<CategoryKey, { fresh?: number; opened?: number | null }>>;
 };
 
 /** Result of the membership read with joined household. */

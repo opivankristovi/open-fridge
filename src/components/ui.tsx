@@ -12,9 +12,19 @@ import {
   type TextInputProps,
 } from 'react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { colors, radius, spacing } from '../theme';
 
-export function Screen({ children }: { children: React.ReactNode }) {
+export function Screen({
+  children,
+  bottomInset = true,
+}: {
+  children: React.ReactNode;
+  /** Reserve space for the Android system buttons. Set false inside the tab navigator (the tab bar handles it). */
+  bottomInset?: boolean;
+}) {
+  const insets = useSafeAreaInsets();
   return (
     <KeyboardAvoidingView
       style={styles.flex}
@@ -22,7 +32,7 @@ export function Screen({ children }: { children: React.ReactNode }) {
     >
       <ScrollView
         style={styles.flex}
-        contentContainerStyle={styles.screen}
+        contentContainerStyle={[styles.screen, bottomInset && { paddingBottom: spacing.lg + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
       >
         {children}
