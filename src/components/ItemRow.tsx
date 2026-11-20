@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { daysInFridge, daysOpen, type ExpiryStatus } from '../domain/expiry';
 import { nl } from '../i18n/nl';
-import { colors, radius, spacing } from '../theme';
+import { makeStyles, radius, spacing } from '../theme';
 import type { Item } from '../types/db';
 import { ItemImage } from './ItemImage';
 import { StatusBadge } from './StatusBadge';
@@ -12,6 +12,7 @@ import { StatusBadge } from './StatusBadge';
 type Props = { item: Item; status: ExpiryStatus; daysLeft: number | null };
 
 function ItemRowBase({ item, status, daysLeft }: Props) {
+  const styles = useStyles();
   const open = daysOpen(item);
   const parts = [nl.fridge.inFridge(daysInFridge(item))];
   if (open !== null) parts.push(nl.fridge.open(open));
@@ -44,19 +45,19 @@ function ItemRowBase({ item, status, daysLeft }: Props) {
 
 export const ItemRow = memo(ItemRowBase);
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: spacing.md,
     padding: spacing.sm,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     alignItems: 'center',
   },
   body: { flex: 1, gap: 2 },
-  name: { fontSize: 16, fontWeight: '700', color: colors.text },
-  brand: { fontSize: 13, color: colors.textMuted },
-  meta: { fontSize: 12, color: colors.textMuted },
-});
+  name: { fontSize: 16, fontWeight: '700', color: c.text },
+  brand: { fontSize: 13, color: c.textMuted },
+  meta: { fontSize: 12, color: c.textMuted },
+}));

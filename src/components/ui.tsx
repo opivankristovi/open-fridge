@@ -14,7 +14,7 @@ import {
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, radius, spacing } from '../theme';
+import { makeStyles, useColors, radius, spacing } from '../theme';
 
 export function Screen({
   children,
@@ -24,6 +24,7 @@ export function Screen({
   /** Reserve space for the Android system buttons. Set false inside the tab navigator (the tab bar handles it). */
   bottomInset?: boolean;
 }) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   return (
     <KeyboardAvoidingView
@@ -42,24 +43,29 @@ export function Screen({
 }
 
 export function Card({ children }: { children: React.ReactNode }) {
+  const styles = useStyles();
   return <View style={styles.card}>{children}</View>;
 }
 
 export function Title({ children }: { children: React.ReactNode }) {
+  const styles = useStyles();
   return <Text style={styles.title}>{children}</Text>;
 }
 
 export function Subtitle({ children }: { children: React.ReactNode }) {
+  const styles = useStyles();
   return <Text style={styles.subtitle}>{children}</Text>;
 }
 
 export function Field(props: TextInputProps & { label: string }) {
+  const styles = useStyles();
+  const c = useColors();
   const { label, style, ...rest } = props;
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={c.textMuted}
         style={[styles.input, style]}
         {...rest}
       />
@@ -80,6 +86,8 @@ export function Button({
   disabled?: boolean;
   variant?: 'primary' | 'outline' | 'danger';
 }) {
+  const styles = useStyles();
+  const c = useColors();
   const isDisabled = disabled || loading;
   return (
     <Pressable
@@ -95,13 +103,13 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? '#fff' : colors.primary} />
+        <ActivityIndicator color={variant === 'primary' ? c.onPrimary : c.primary} />
       ) : (
         <Text
           style={[
             styles.buttonText,
-            variant === 'outline' && { color: colors.primary },
-            variant === 'danger' && { color: colors.danger },
+            variant === 'outline' && { color: c.primary },
+            variant === 'danger' && { color: c.danger },
           ]}
         >
           {title}
@@ -112,6 +120,7 @@ export function Button({
 }
 
 export function LinkText({ title, onPress }: { title: string; onPress: () => void }) {
+  const styles = useStyles();
   return (
     <Pressable onPress={onPress} style={styles.link} accessibilityRole="link">
       <Text style={styles.linkText}>{title}</Text>
@@ -120,19 +129,23 @@ export function LinkText({ title, onPress }: { title: string; onPress: () => voi
 }
 
 export function ErrorText({ message }: { message: string | null }) {
+  const styles = useStyles();
   if (!message) return null;
   return <Text style={styles.error}>{message}</Text>;
 }
 
 export function Spinner() {
+  const styles = useStyles();
+  const c = useColors();
   return (
     <View style={styles.center}>
-      <ActivityIndicator size="large" color={colors.primary} />
+      <ActivityIndicator size="large" color={c.primary} />
     </View>
   );
 }
 
 export function Placeholder({ text }: { text: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.center}>
       <Text style={styles.subtitle}>{text}</Text>
@@ -140,45 +153,45 @@ export function Placeholder({ text }: { text: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
+const useStyles = makeStyles((c) => StyleSheet.create({
+  flex: { flex: 1, backgroundColor: c.background },
   screen: { padding: spacing.lg, gap: spacing.md, flexGrow: 1, justifyContent: 'center' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.background },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.lg,
     padding: spacing.md,
     gap: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  title: { fontSize: 28, fontWeight: '700', color: colors.text },
-  subtitle: { fontSize: 16, color: colors.textMuted },
+  title: { fontSize: 28, fontWeight: '700', color: c.text },
+  subtitle: { fontSize: 16, color: c.textMuted },
   fieldWrap: { gap: spacing.xs },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text },
+  label: { fontSize: 14, fontWeight: '600', color: c.text },
   input: {
     minHeight: 52,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
+    color: c.text,
+    backgroundColor: c.surface,
   },
   button: {
     minHeight: 52,
     borderRadius: radius.md,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
   },
-  buttonOutline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
-  buttonDanger: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.danger },
+  buttonOutline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: c.primary },
+  buttonDanger: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: c.danger },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  buttonText: { color: c.onPrimary, fontSize: 16, fontWeight: '700' },
   link: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  linkText: { color: colors.primary, fontSize: 15, fontWeight: '600' },
-  error: { color: colors.danger, fontSize: 14 },
-});
+  linkText: { color: c.primary, fontSize: 15, fontWeight: '600' },
+  error: { color: c.danger, fontSize: 14 },
+}));

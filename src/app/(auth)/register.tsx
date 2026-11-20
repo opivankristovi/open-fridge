@@ -6,9 +6,10 @@ import { Button, ErrorText, Field, LinkText, Screen, Title } from '../../compone
 import { nl } from '../../i18n/nl';
 import { errorMessage } from '../../lib/errors';
 import { supabase } from '../../lib/supabase';
-import { colors } from '../../theme';
+import { useColors } from '../../theme';
 
 export default function RegisterScreen() {
+  const c = useColors();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -71,7 +72,7 @@ export default function RegisterScreen() {
       />
       <ErrorText message={error} />
       {notice ? (
-        <Text style={{ color: colors.primary, fontSize: 15, fontWeight: '600' }}>{notice}</Text>
+        <Text style={{ color: c.primary, fontSize: 15, fontWeight: '600' }}>{notice}</Text>
       ) : null}
       <Button title={nl.auth.register} onPress={onRegister} loading={busy} />
       <LinkText title={nl.auth.haveAccount} onPress={() => router.back()} />

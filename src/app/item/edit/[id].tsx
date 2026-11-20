@@ -21,9 +21,10 @@ import type { CategoryKey } from '../../../domain/categories';
 import { nl } from '../../../i18n/nl';
 import { errorMessage } from '../../../lib/errors';
 import { uploadItemPhoto } from '../../../services/photos';
-import { colors, spacing } from '../../../theme';
+import { makeStyles, spacing } from '../../../theme';
 
 export default function EditItemScreen() {
+  const styles = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = useItem(id);
   const settings = useHouseholdSettings();
@@ -127,7 +128,7 @@ export default function EditItemScreen() {
       <Field label={nl.add.name} value={name} onChangeText={setName} autoCapitalize="sentences" />
       <Field label={nl.add.brand} value={brand} onChangeText={setBrand} autoCapitalize="words" />
       <Text style={styles.label}>{nl.add.category}</Text>
-      <CategoryChips value={category} onChange={(c) => c && setCategory(c)} />
+      <CategoryChips value={category} onChange={(cat) => cat && setCategory(cat)} />
       <Text style={styles.label}>{nl.add.quantity}</Text>
       <Stepper value={quantity} min={1} max={999} onChange={setQuantity} />
 
@@ -139,11 +140,11 @@ export default function EditItemScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: { padding: spacing.md, gap: spacing.md, backgroundColor: colors.background },
-  capture: { flex: 1, padding: spacing.md, backgroundColor: colors.background },
-  gone: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg, gap: spacing.md, backgroundColor: colors.background },
-  goneText: { fontSize: 18, fontWeight: '600', color: colors.text, textAlign: 'center' },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text },
+const useStyles = makeStyles((c) => StyleSheet.create({
+  content: { padding: spacing.md, gap: spacing.md, backgroundColor: c.background },
+  capture: { flex: 1, padding: spacing.md, backgroundColor: c.background },
+  gone: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg, gap: spacing.md, backgroundColor: c.background },
+  goneText: { fontSize: 18, fontWeight: '600', color: c.text, textAlign: 'center' },
+  label: { fontSize: 14, fontWeight: '600', color: c.text },
   preview: { width: '100%', height: 160, borderRadius: 12, overflow: 'hidden' },
-});
+}));

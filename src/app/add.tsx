@@ -25,7 +25,7 @@ import { nl } from '../i18n/nl';
 import { ensurePermission } from '../services/notifications';
 import { lookupBarcode } from '../services/openFoodFacts';
 import { deletePhoto, uploadItemPhoto } from '../services/photos';
-import { colors, radius, spacing } from '../theme';
+import { makeStyles, useColors, radius, spacing } from '../theme';
 
 type Step = 'scan' | 'details' | 'photo' | 'expiry' | 'save';
 type Lookup = 'idle' | 'loading' | 'found' | 'notfound';
@@ -34,6 +34,8 @@ const STEPS: Exclude<Step, 'save'>[] = ['scan', 'details', 'photo', 'expiry'];
 const BARCODE_RE = /^[0-9]{6,14}$/;
 
 export default function AddScreen() {
+  const styles = useStyles();
+  const c = useColors();
   const insets = useSafeAreaInsets();
   const { household } = useAuth();
   const hid = household?.id as string;
@@ -245,7 +247,7 @@ export default function AddScreen() {
           style={styles.backBtn}
           hitSlop={8}
         >
-          <Ionicons name="chevron-back" size={22} color={colors.primary} />
+          <Ionicons name="chevron-back" size={22} color={c.primary} />
           <Text style={styles.backText}>{nl.add.back}</Text>
         </Pressable>
         <View style={styles.dots}>
@@ -305,7 +307,7 @@ export default function AddScreen() {
             {nameError ? <ErrorText message={nl.add.nameRequired} /> : null}
             <Field label={nl.add.brand} value={brand} onChangeText={setBrand} autoCapitalize="words" />
             <Text style={styles.label}>{nl.add.category}</Text>
-            <CategoryChips value={category} onChange={(c) => c && setCategory(c)} />
+            <CategoryChips value={category} onChange={(cat) => cat && setCategory(cat)} />
             <Text style={styles.label}>{nl.add.quantity}</Text>
             <Stepper value={quantity} min={1} max={999} onChange={setQuantity} />
             <Button title={nl.add.next} onPress={toPhoto} />
@@ -330,34 +332,34 @@ export default function AddScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const useStyles = makeStyles((c) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   header: {
     padding: spacing.md,
     gap: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
+    borderBottomColor: c.border,
+    backgroundColor: c.surface,
   },
   backBtn: { flexDirection: 'row', alignItems: 'center', minHeight: 40, alignSelf: 'flex-start' },
-  backText: { color: colors.primary, fontSize: 16, fontWeight: '600' },
+  backText: { color: c.primary, fontSize: 16, fontWeight: '600' },
   dots: { flexDirection: 'row', justifyContent: 'space-between' },
   dotWrap: { flex: 1, alignItems: 'center', gap: 4 },
-  dot: { height: 6, alignSelf: 'stretch', marginHorizontal: 2, borderRadius: 3, backgroundColor: colors.border },
-  dotActive: { backgroundColor: colors.primary },
-  dotLabel: { fontSize: 11, color: colors.textMuted },
-  dotLabelActive: { color: colors.primary, fontWeight: '700' },
+  dot: { height: 6, alignSelf: 'stretch', marginHorizontal: 2, borderRadius: 3, backgroundColor: c.border },
+  dotActive: { backgroundColor: c.primary },
+  dotLabel: { fontSize: 11, color: c.textMuted },
+  dotLabelActive: { color: c.primary, fontWeight: '700' },
   padded: { flex: 1, padding: spacing.md, gap: spacing.md, justifyContent: 'center' },
   camera: { flex: 1, borderRadius: radius.lg, overflow: 'hidden' },
-  centerText: { textAlign: 'center', fontSize: 16, color: colors.text },
+  centerText: { textAlign: 'center', fontSize: 16, color: c.text },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
   form: { padding: spacing.md, gap: spacing.md },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text },
+  label: { fontSize: 14, fontWeight: '600', color: c.text },
   notice: {
-    backgroundColor: colors.primaryLight,
-    color: colors.primaryDark,
+    backgroundColor: c.primaryLight,
+    color: c.primaryDark,
     padding: spacing.md,
     borderRadius: radius.md,
     fontWeight: '600',
   },
-});
+}));

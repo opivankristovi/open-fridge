@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { nl } from '../i18n/nl';
 import { compressPhoto } from '../services/photos';
-import { colors, radius, spacing } from '../theme';
+import { makeStyles, radius, spacing } from '../theme';
 import { Button, Spinner } from './ui';
 
 type Props = {
@@ -16,6 +16,7 @@ type Props = {
 };
 
 export function PhotoCapture({ onUse, onSkip, skipLabel = nl.add.skip }: Props) {
+  const styles = useStyles();
   const [permission, requestPermission] = useCameraPermissions();
   const camera = useRef<CameraView>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -82,10 +83,10 @@ export function PhotoCapture({ onUse, onSkip, skipLabel = nl.add.skip }: Props) 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => StyleSheet.create({
   flex: { flex: 1, gap: spacing.md },
   center: { flex: 1, justifyContent: 'center', gap: spacing.md },
-  text: { fontSize: 16, color: colors.text, textAlign: 'center' },
+  text: { fontSize: 16, color: c.text, textAlign: 'center' },
   camera: { flex: 1, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: '#000' },
   actions: { flexDirection: 'row', gap: spacing.md },
-});
+}));

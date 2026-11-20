@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { nl } from '../i18n/nl';
-import { colors, radius, spacing } from '../theme';
+import { makeStyles, radius, spacing } from '../theme';
 import { Stepper } from './Stepper';
 
 type Props = {
@@ -13,6 +13,7 @@ type Props = {
 };
 
 export function OpenedShelfInput({ value, onChange, fallbackDays }: Props) {
+  const styles = useStyles();
   const isDays = value !== null;
   return (
     <View style={styles.wrap}>
@@ -39,18 +40,18 @@ export function OpenedShelfInput({ value, onChange, fallbackDays }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => StyleSheet.create({
   wrap: { gap: spacing.sm },
   segment: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
   },
   item: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', padding: spacing.sm },
-  itemActive: { backgroundColor: colors.primary },
-  text: { fontSize: 14, fontWeight: '600', color: colors.text, textAlign: 'center' },
-  textActive: { color: '#fff' },
-});
+  itemActive: { backgroundColor: c.primary },
+  text: { fontSize: 14, fontWeight: '600', color: c.text, textAlign: 'center' },
+  textActive: { color: c.onPrimary },
+}));

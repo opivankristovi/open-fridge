@@ -1,11 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Appearance } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 
-export type Prefs = { warnDays: number; notifyHour: number };
+export type ThemePref = 'system' | 'light' | 'dark';
 
-export const DEFAULT_PREFS: Prefs = { warnDays: 2, notifyHour: 9 };
+export type Prefs = { warnDays: number; notifyHour: number; theme: ThemePref };
+
+export const DEFAULT_PREFS: Prefs = { warnDays: 2, notifyHour: 9, theme: 'system' };
 
 const KEY = 'prefs.v1';
+
+/** Force the app-level colour scheme; 'auto' (RN 0.88) resets to the system setting. */
+export function applyTheme(theme: ThemePref): void {
+  Appearance.setColorScheme(theme === 'system' ? 'auto' : theme);
+}
 
 let cache: Prefs | null = null;
 const listeners = new Set<(p: Prefs) => void>();
@@ -18,6 +26,10 @@ export async function getPrefs(): Promise<Prefs> {
     cache = {
       warnDays: typeof parsed.warnDays === 'number' ? parsed.warnDays : DEFAULT_PREFS.warnDays,
       notifyHour: typeof parsed.notifyHour === 'number' ? parsed.notifyHour : DEFAULT_PREFS.notifyHour,
+      theme:
+        parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system'
+          ? parsed.theme
+          : DEFAULT_PREFS.theme,
     };
   } catch {
     cache = { ...DEFAULT_PREFS };
@@ -28,6 +40,7 @@ export async function getPrefs(): Promise<Prefs> {
 export async function setPrefs(patch: Partial<Prefs>): Promise<Prefs> {
   const next = { ...(await getPrefs()), ...patch };
   cache = next;
+  if (patch.theme !== undefined) applyTheme(next.theme);
   listeners.forEach((l) => l(next));
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify(next));

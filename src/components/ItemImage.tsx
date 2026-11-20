@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { CATEGORIES } from '../domain/categories';
 import { useSignedPhotoUrl } from '../services/photos';
-import { colors, radius } from '../theme';
+import { makeStyles, useColors, radius } from '../theme';
 import type { Item } from '../types/db';
 
 type Props = {
@@ -16,6 +16,8 @@ type Props = {
 
 /** Signed photo -> Open Food Facts image -> category icon on a tinted background. */
 export function ItemImage({ item, size, fill }: Props) {
+  const styles = useStyles();
+  const c = useColors();
   const signed = useSignedPhotoUrl(item.photo_path);
   const uri = signed.data ?? (item.photo_path && signed.isPending ? null : item.image_url);
   const box = fill ? { width: '100%' as const, height: size } : { width: size, height: size };
@@ -27,13 +29,13 @@ export function ItemImage({ item, size, fill }: Props) {
       <Ionicons
         name={CATEGORIES[item.category].icon as keyof typeof Ionicons.glyphMap}
         size={Math.round(size * 0.45)}
-        color={colors.primary}
+        color={c.primary}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => StyleSheet.create({
   base: { borderRadius: radius.md, overflow: 'hidden' },
-  fallback: { backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
-});
+  fallback: { backgroundColor: c.primaryLight, alignItems: 'center', justifyContent: 'center' },
+}));

@@ -8,7 +8,7 @@ import { CATEGORIES, shelfDefaults, type CategoryKey, type CategoryOverrides } f
 import { describeDaysLeft, effectiveExpiry, parseLocalDate, type ExpiryInput } from '../domain/expiry';
 import { formatLongDate, formatYmd, toYmd } from '../domain/format';
 import { nl } from '../i18n/nl';
-import { colors, radius, spacing } from '../theme';
+import { makeStyles, useColors, radius, spacing } from '../theme';
 import type { Item } from '../types/db';
 import { OpenedShelfInput } from './OpenedShelfInput';
 import { Stepper } from './Stepper';
@@ -78,6 +78,8 @@ type Props = {
 };
 
 export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Props) {
+  const styles = useStyles();
+  const c = useColors();
   const settings = useHouseholdSettings();
   const canOpen = CATEGORIES[category].canOpen;
   const fallbackDays =
@@ -148,7 +150,7 @@ export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Pro
             <Switch
               value={value.opened}
               onValueChange={(v) => set({ opened: v })}
-              trackColor={{ true: colors.primary, false: colors.border }}
+              trackColor={{ true: c.primary, false: c.border }}
             />
           </View>
           {value.opened ? (
@@ -174,34 +176,34 @@ export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Pro
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => StyleSheet.create({
   wrap: { gap: spacing.md },
   segment: {
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
   },
   segmentItem: { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', padding: spacing.sm },
-  segmentItemActive: { backgroundColor: colors.primary },
-  segmentText: { fontSize: 14, fontWeight: '600', color: colors.text, textAlign: 'center' },
-  segmentTextActive: { color: '#fff' },
+  segmentItemActive: { backgroundColor: c.primary },
+  segmentText: { fontSize: 14, fontWeight: '600', color: c.text, textAlign: 'center' },
+  segmentTextActive: { color: c.onPrimary },
   block: { gap: spacing.sm },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text },
+  label: { fontSize: 14, fontWeight: '600', color: c.text },
   dateButton: {
     minHeight: 52,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.md,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
   },
-  dateText: { fontSize: 16, color: colors.text },
+  dateText: { fontSize: 16, color: c.text },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
-  hint: { fontSize: 13, color: colors.textMuted },
-  preview: { backgroundColor: colors.primaryLight, borderRadius: radius.md, padding: spacing.md },
-  previewText: { fontSize: 15, fontWeight: '600', color: colors.primaryDark },
-});
+  hint: { fontSize: 13, color: c.textMuted },
+  preview: { backgroundColor: c.primaryLight, borderRadius: radius.md, padding: spacing.md },
+  previewText: { fontSize: 15, fontWeight: '600', color: c.primaryDark },
+}));

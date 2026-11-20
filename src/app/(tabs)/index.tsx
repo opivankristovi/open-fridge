@@ -11,7 +11,7 @@ import { useFridgeItems } from '../../data/hooks';
 import type { CategoryKey } from '../../domain/categories';
 import { daysLeft, expiryStatus, type ExpiryStatus } from '../../domain/expiry';
 import { nl } from '../../i18n/nl';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, useColors, radius, spacing } from '../../theme';
 import type { Item } from '../../types/db';
 
 type Row = { item: Item; status: ExpiryStatus; daysLeft: number | null };
@@ -20,6 +20,8 @@ type Section = { key: ExpiryStatus; title: string; data: Row[] };
 const ORDER: ExpiryStatus[] = ['verlopen', 'bijna', 'ok', 'onbekend'];
 
 export default function FridgeScreen() {
+  const styles = useStyles();
+  const c = useColors();
   const { data, isPending, isRefetching, refetch } = useFridgeItems();
   const { prefs } = usePrefs();
   const [search, setSearch] = useState('');
@@ -57,12 +59,12 @@ export default function FridgeScreen() {
     <View style={styles.container}>
       <View style={styles.filters}>
         <View style={styles.searchWrap}>
-          <Ionicons name="search" size={18} color={colors.textMuted} />
+          <Ionicons name="search" size={18} color={c.textMuted} />
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder={nl.fridge.searchPlaceholder}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={c.textMuted}
             style={styles.search}
             autoCorrect={false}
             returnKeyType="search"
@@ -79,7 +81,7 @@ export default function FridgeScreen() {
         stickySectionHeadersEnabled={false}
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} colors={[colors.primary]} />}
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} colors={[c.primary]} progressBackgroundColor={c.surface} />}
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
           <Text style={styles.empty}>{isEmpty ? nl.fridge.empty : nl.fridge.noResults}</Text>
@@ -92,14 +94,14 @@ export default function FridgeScreen() {
         onPress={() => router.push('/add')}
         style={({ pressed }) => [styles.fab, pressed && { opacity: 0.9 }]}
       >
-        <Ionicons name="add" size={32} color="#fff" />
+        <Ionicons name="add" size={32} color={c.onPrimary} />
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const useStyles = makeStyles((c) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.background },
   filters: { paddingHorizontal: spacing.md, paddingTop: spacing.md, gap: spacing.sm },
   searchWrap: {
     flexDirection: 'row',
@@ -108,21 +110,21 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     borderRadius: radius.md,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
   },
-  search: { flex: 1, fontSize: 16, color: colors.text, minHeight: 48 },
+  search: { flex: 1, fontSize: 16, color: c.text, minHeight: 48 },
   list: { padding: spacing.md, paddingBottom: 112, flexGrow: 1 },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: colors.textMuted,
+    color: c.textMuted,
     textTransform: 'uppercase',
     marginTop: spacing.md,
     marginBottom: spacing.sm,
   },
-  empty: { textAlign: 'center', color: colors.textMuted, fontSize: 16, marginTop: spacing.xl },
+  empty: { textAlign: 'center', color: c.textMuted, fontSize: 16, marginTop: spacing.xl },
   fab: {
     position: 'absolute',
     right: spacing.lg,
@@ -130,9 +132,9 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,
   },
-});
+}));

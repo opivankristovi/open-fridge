@@ -2,12 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Linking, Share, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '../../auth/AuthProvider';
+import { Segmented } from '../../components/Segmented';
 import { OpenedShelfInput } from '../../components/OpenedShelfInput';
 import { Stepper } from '../../components/Stepper';
 import { Button, Card, ErrorText, LinkText, Screen, Subtitle } from '../../components/ui';
 import { regenerateInviteCode } from '../../data/householdRepo';
 import { useHouseholdSettings, useMembers, useUpdateCategoryDefaults } from '../../data/hooks';
-import { usePrefs } from '../../data/localPrefs';
+import { usePrefs, type ThemePref } from '../../data/localPrefs';
 import { CATEGORIES, shelfDefaults, type CategoryKey } from '../../domain/categories';
 import { nl } from '../../i18n/nl';
 import { errorMessage } from '../../lib/errors';
@@ -18,7 +19,7 @@ import {
   requestResync,
   sendTestNotification,
 } from '../../services/notifications';
-import { colors, spacing } from '../../theme';
+import { makeStyles, spacing } from '../../theme';
 import type { HouseholdSettings } from '../../types/db';
 
 const KEYS = Object.keys(CATEGORIES) as CategoryKey[];
@@ -26,6 +27,7 @@ const KEYS = Object.keys(CATEGORIES) as CategoryKey[];
 type Defaults = HouseholdSettings['category_defaults'];
 
 export default function SettingsScreen() {
+  const styles = useStyles();
   const { household, membership, refreshHousehold, signOut } = useAuth();
   const { prefs, update } = usePrefs();
   const members = useMembers();
@@ -169,6 +171,20 @@ export default function SettingsScreen() {
       </Card>
 
       <Card>
+        <Text style={styles.heading}>{nl.settings.appearance}</Text>
+        <Subtitle>{nl.settings.appearanceHint}</Subtitle>
+        <Segmented<ThemePref>
+          value={prefs.theme}
+          options={[
+            { value: 'system', label: nl.settings.themeSystem },
+            { value: 'light', label: nl.settings.themeLight },
+            { value: 'dark', label: nl.settings.themeDark },
+          ]}
+          onChange={(theme) => void update({ theme })}
+        />
+      </Card>
+
+      <Card>
         <Text style={styles.heading}>{nl.settings.shelfLife}</Text>
         <Subtitle>{nl.settings.shelfLifeHint}</Subtitle>
         <Text style={styles.explain}>
@@ -241,18 +257,18 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  heading: { fontSize: 18, fontWeight: '800', color: colors.text },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text },
-  info: { fontSize: 14, color: colors.primaryDark },
+const useStyles = makeStyles((c) => StyleSheet.create({
+  heading: { fontSize: 18, fontWeight: '800', color: c.text },
+  label: { fontSize: 14, fontWeight: '600', color: c.text },
+  info: { fontSize: 14, color: c.primaryDark },
   catBlock: { gap: spacing.sm, paddingTop: spacing.sm },
-  catName: { fontSize: 15, fontWeight: '700', color: colors.text },
-  explain: { fontSize: 13, color: colors.textMuted, lineHeight: 19 },
-  bold: { fontWeight: '800', color: colors.text },
+  catName: { fontSize: 15, fontWeight: '700', color: c.text },
+  explain: { fontSize: 13, color: c.textMuted, lineHeight: 19 },
+  bold: { fontWeight: '800', color: c.text },
   catBlockInner: { gap: spacing.sm },
   catRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  catLabel: { fontSize: 13, color: colors.textMuted, flexShrink: 1 },
-  householdName: { fontSize: 22, fontWeight: '700', color: colors.text },
-  code: { fontSize: 36, fontWeight: '800', letterSpacing: 6, color: colors.primary },
-  member: { fontSize: 15, color: colors.text },
-});
+  catLabel: { fontSize: 13, color: c.textMuted, flexShrink: 1 },
+  householdName: { fontSize: 22, fontWeight: '700', color: c.text },
+  code: { fontSize: 36, fontWeight: '800', letterSpacing: 6, color: c.primary },
+  member: { fontSize: 15, color: c.text },
+}));

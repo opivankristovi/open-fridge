@@ -12,10 +12,11 @@ import {
   useNotificationTapRouting,
   useResyncOnActive,
 } from '../../services/notifications';
-import { colors } from '../../theme';
+import { useColors } from '../../theme';
 
 export default function TabsLayout() {
   const { household } = useAuth();
+  const c = useColors();
   const hid = household?.id ?? null;
   // Keep the tab bar above Android's on-screen navigation buttons (edge-to-edge).
   const insets = useSafeAreaInsets();
@@ -31,12 +32,18 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { height: 58 + insets.bottom, paddingBottom: 6 + insets.bottom, paddingTop: 6 },
+        tabBarActiveTintColor: c.primary,
+        tabBarInactiveTintColor: c.textMuted,
+        tabBarStyle: {
+          height: 58 + insets.bottom,
+          paddingBottom: 6 + insets.bottom,
+          paddingTop: 6,
+          backgroundColor: c.surface,
+          borderTopColor: c.border,
+        },
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
-        headerStyle: { backgroundColor: colors.surface },
-        headerTitleStyle: { color: colors.text, fontWeight: '700' },
+        headerStyle: { backgroundColor: c.surface },
+        headerTitleStyle: { color: c.text, fontWeight: '700' },
       }}
     >
       <Tabs.Screen

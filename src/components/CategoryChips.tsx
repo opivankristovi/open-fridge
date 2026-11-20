@@ -2,11 +2,12 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { CATEGORIES, type CategoryKey } from '../domain/categories';
 import { nl } from '../i18n/nl';
-import { colors, radius, spacing } from '../theme';
+import { makeStyles, radius, spacing } from '../theme';
 
 const KEYS = Object.keys(CATEGORIES) as CategoryKey[];
 
 function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -29,6 +30,7 @@ export function CategoryChips({
   onChange: (next: CategoryKey | null) => void;
   allowAll?: boolean;
 }) {
+  const styles = useStyles();
   return (
     <View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
@@ -41,19 +43,19 @@ export function CategoryChips({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => StyleSheet.create({
   row: { gap: spacing.sm, paddingVertical: spacing.xs },
   chip: {
     minHeight: 40,
     paddingHorizontal: spacing.md,
     borderRadius: radius.lg * 2,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
+    borderColor: c.border,
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontSize: 14, fontWeight: '600', color: colors.text },
-  chipTextSelected: { color: '#fff' },
-});
+  chipSelected: { backgroundColor: c.primary, borderColor: c.primary },
+  chipText: { fontSize: 14, fontWeight: '600', color: c.text },
+  chipTextSelected: { color: c.onPrimary },
+}));

@@ -150,6 +150,11 @@ export const nl = {
     codeRequired: 'Vul de code in.',
   },
   settings: {
+    appearance: 'Weergave',
+    appearanceHint: 'Deze instelling geldt alleen voor deze telefoon.',
+    themeSystem: 'Systeem',
+    themeLight: 'Licht',
+    themeDark: 'Donker',
     household: 'Huishouden',
     inviteCode: 'Uitnodigingscode',
     inviteHint: 'Deel deze code met huisgenoten zodat ze kunnen deelnemen.',

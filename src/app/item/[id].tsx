@@ -29,9 +29,10 @@ import {
 import { formatLongDate, formatShortDate } from '../../domain/format';
 import { dagen, nl } from '../../i18n/nl';
 import { errorMessage } from '../../lib/errors';
-import { colors, spacing } from '../../theme';
+import { makeStyles, spacing } from '../../theme';
 
 export default function ItemDetailScreen() {
+  const styles = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = useItem(id);
   const members = useMembers();
@@ -185,16 +186,16 @@ export default function ItemDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: { padding: spacing.md, gap: spacing.md, backgroundColor: colors.background },
-  gone: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg, gap: spacing.md, backgroundColor: colors.background },
-  goneText: { fontSize: 18, fontWeight: '600', color: colors.text, textAlign: 'center' },
+const useStyles = makeStyles((c) => StyleSheet.create({
+  content: { padding: spacing.md, gap: spacing.md, backgroundColor: c.background },
+  gone: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg, gap: spacing.md, backgroundColor: c.background },
+  goneText: { fontSize: 18, fontWeight: '600', color: c.text, textAlign: 'center' },
   titleBlock: { gap: 2 },
-  name: { fontSize: 26, fontWeight: '800', color: colors.text },
-  brand: { fontSize: 16, color: colors.textMuted },
-  meta: { fontSize: 14, color: colors.textMuted },
-  until: { fontSize: 18, fontWeight: '700', color: colors.text },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text },
+  name: { fontSize: 26, fontWeight: '800', color: c.text },
+  brand: { fontSize: 16, color: c.textMuted },
+  meta: { fontSize: 14, color: c.textMuted },
+  until: { fontSize: 18, fontWeight: '700', color: c.text },
+  label: { fontSize: 14, fontWeight: '600', color: c.text },
   actions: { flexDirection: 'row', gap: spacing.md },
   flex: { flex: 1 },
-});
+}));

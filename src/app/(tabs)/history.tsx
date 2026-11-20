@@ -6,10 +6,12 @@ import { Card, Spinner } from '../../components/ui';
 import { useHistory, useMembers, useRestoreItem } from '../../data/hooks';
 import { formatShortDate } from '../../domain/format';
 import { nl } from '../../i18n/nl';
-import { colors, radius, spacing } from '../../theme';
+import { makeStyles, useColors, radius, spacing } from '../../theme';
 import type { Item } from '../../types/db';
 
 export default function HistoryScreen() {
+  const styles = useStyles();
+  const c = useColors();
   const { data, isPending, isRefetching, refetch } = useHistory(30);
   const members = useMembers();
   const restore = useRestoreItem();
@@ -41,7 +43,7 @@ export default function HistoryScreen() {
       data={items}
       keyExtractor={(i) => i.id}
       contentContainerStyle={styles.list}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} colors={[colors.primary]} />}
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} colors={[c.primary]} progressBackgroundColor={c.surface} />}
       ListHeaderComponent={
         <Card>
           <Text style={styles.summaryTitle}>{nl.history.title}</Text>
@@ -58,7 +60,7 @@ export default function HistoryScreen() {
             <Ionicons
               name={consumed ? 'checkmark-circle' : 'trash'}
               size={28}
-              color={consumed ? colors.status.ok : colors.status.verlopen}
+              color={consumed ? c.status.ok : c.status.verlopen}
             />
             <View style={styles.body}>
               <Text style={styles.name} numberOfLines={1}>
@@ -83,24 +85,24 @@ export default function HistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => StyleSheet.create({
   list: { padding: spacing.md, gap: spacing.sm, flexGrow: 1 },
-  summaryTitle: { fontSize: 14, color: colors.textMuted, fontWeight: '600' },
-  summary: { fontSize: 20, fontWeight: '800', color: colors.text },
-  empty: { textAlign: 'center', color: colors.textMuted, fontSize: 16, marginTop: spacing.xl },
+  summaryTitle: { fontSize: 14, color: c.textMuted, fontWeight: '600' },
+  summary: { fontSize: 20, fontWeight: '800', color: c.text },
+  empty: { textAlign: 'center', color: c.textMuted, fontSize: 16, marginTop: spacing.xl },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     padding: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
   body: { flex: 1, gap: 2 },
-  name: { fontSize: 16, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 13, color: colors.textMuted },
+  name: { fontSize: 16, fontWeight: '700', color: c.text },
+  meta: { fontSize: 13, color: c.textMuted },
   restore: { minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.sm },
-  restoreText: { color: colors.primary, fontWeight: '700', fontSize: 14 },
-});
+  restoreText: { color: c.primary, fontWeight: '700', fontSize: 14 },
+}));
