@@ -259,8 +259,7 @@ export const de: Strings = {
     exactAlarmOff: 'Nicht erlaubt',
     exactAlarmHint: 'Ohne diese Berechtigung kann Android Benachrichtigungen um bis zu eine Stunde verzögern.',
     exactAlarmAllow: 'Erlauben',
-    xiaomiHint:
-      "Auf Xiaomi-, Redmi- und POCO-Handys: Aktiviere 'Autostart' für Open Fridge und stelle den Akkusparmodus auf 'Keine Einschränkungen', sonst kommen Benachrichtigungen nicht an, wenn die App geschlossen ist.",
+    xiaomiHint: "Auf Xiaomi-, Redmi- und POCO-Handys: Schalte „Autostart“ für Open Fridge ein und stelle den Akkusparmodus auf „Keine Einschränkungen“. So bekommen auch Produkte, die deine Mitbewohner hinzufügen, Erinnerungen, während die App geschlossen ist.",
     openAppSettings: 'App-Einstellungen öffnen',
     testNoPermission: 'Aktiviere zuerst die Benachrichtigungen.',
     permission: 'Berechtigung für Benachrichtigungen',

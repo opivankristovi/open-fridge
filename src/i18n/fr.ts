@@ -259,8 +259,7 @@ export const fr: Strings = {
     exactAlarmOff: 'Non autorisé',
     exactAlarmHint: "Sans cette autorisation, Android peut retarder les notifications jusqu'à une heure.",
     exactAlarmAllow: 'Autoriser',
-    xiaomiHint:
-      "Sur les téléphones Xiaomi, Redmi et POCO : activez « Autostart » (Démarrage automatique) pour Open Fridge et réglez l'économiseur de batterie sur « Aucune restriction », sinon les notifications n'arrivent pas lorsque l'application est fermée.",
+    xiaomiHint: "Sur les téléphones Xiaomi, Redmi et POCO : activez « Autostart » (Démarrage automatique) pour Open Fridge et réglez l'économiseur de batterie sur « Aucune restriction ». Ainsi, les produits ajoutés par vos colocataires reçoivent aussi des rappels quand l'app est fermée.",
     openAppSettings: "Ouvrir les paramètres de l'application",
     testNoPermission: "Activez d'abord les notifications.",
     permission: 'Autorisation des notifications',

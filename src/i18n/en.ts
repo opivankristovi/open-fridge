@@ -259,8 +259,7 @@ export const en: Strings = {
     exactAlarmOff: 'Not allowed',
     exactAlarmHint: 'Without this permission, Android can delay notifications by up to an hour.',
     exactAlarmAllow: 'Allow',
-    xiaomiHint:
-      "On Xiaomi, Redmi and POCO phones: turn on 'Autostart' for Open Fridge and set Battery saver to 'No restrictions', otherwise notifications don't arrive while the app is closed.",
+    xiaomiHint: "On Xiaomi, Redmi and POCO phones: turn on 'Autostart' for Open Fridge and set Battery saver to 'No restrictions'. That way, products your housemates add also get reminders while the app is closed.",
     openAppSettings: 'Open app settings',
     testNoPermission: 'Turn on notifications first.',
     permission: 'Notification permission',

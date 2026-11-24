@@ -257,8 +257,7 @@ export const nl = {
     exactAlarmOff: 'Niet toegestaan',
     exactAlarmHint: 'Zonder deze toestemming kan Android meldingen tot een uur uitstellen.',
     exactAlarmAllow: 'Toestaan',
-    xiaomiHint:
-      "Op Xiaomi-, Redmi- en POCO-telefoons: zet 'Autostart' aan voor Open Fridge en kies bij Batterijbesparing 'Geen beperkingen', anders komen meldingen niet aan als de app gesloten is.",
+    xiaomiHint: "Op Xiaomi-, Redmi- en POCO-telefoons: zet 'Autostart' aan voor Open Fridge en kies bij Batterijbesparing 'Geen beperkingen'. Zo worden ook producten die huisgenoten toevoegen ingepland terwijl de app gesloten is.",
     openAppSettings: 'Open app-instellingen',
     testNoPermission: 'Zet eerst meldingen aan.',
     permission: 'Toestemming voor meldingen',
