@@ -1,4 +1,12 @@
-import { buildSchedule, MAX_SCHEDULED, type ScheduleItem } from '../schedule';
+import {
+  buildSchedule,
+  entryId,
+  MAX_SCHEDULED,
+  parseEntryId,
+  planResync,
+  type ScheduledEntry,
+  type ScheduleItem,
+} from '../schedule';
 import { setLanguage } from '../../i18n/strings';
 
 beforeAll(() => setLanguage('nl'));
@@ -72,5 +80,75 @@ describe('buildSchedule', () => {
     expect(out).toHaveLength(MAX_SCHEDULED);
     const times = out.map((e) => e.date.getTime());
     expect(times).toEqual([...times].sort((a, b) => a - b));
+  });
+});
+
+function entry(itemId: string, date: Date, body = 'Melk: nog 2 dagen', kind: 'warn' | 'expiry' = 'warn'): ScheduledEntry {
+  return { kind, date, title: 'Bijna over datum', body, data: { itemId } };
+}
+
+describe('entryId / parseEntryId', () => {
+  const d = new Date(2026, 10, 20, 9, 0);
+
+  it('is stable for the same input and differs when date or body changes', () => {
+    expect(entryId(entry('a', d))).toBe(entryId(entry('a', new Date(d.getTime()))));
+    expect(entryId(entry('a', d))).not.toBe(entryId(entry('a', new Date(2026, 10, 21, 9, 0))));
+    expect(entryId(entry('a', d))).not.toBe(entryId(entry('a', d, 'Kaas: nog 2 dagen')));
+  });
+
+  it('round-trips through parseEntryId', () => {
+    expect(parseEntryId(entryId(entry('a', d, 'x', 'expiry')))).toEqual({
+      itemId: 'a',
+      kind: 'expiry',
+      time: d.getTime(),
+    });
+  });
+
+  it('returns null for non-item or malformed ids', () => {
+    expect(parseEntryId('abc')).toBeNull();
+    expect(parseEntryId('3f2b8c1e-aaaa-bbbb-cccc-1234567890ab')).toBeNull();
+    expect(parseEntryId('item:broken')).toBeNull();
+  });
+});
+
+describe('planResync', () => {
+  const d1 = new Date(2026, 10, 20, 9, 0);
+  const d2 = new Date(2026, 10, 22, 9, 0);
+  const inStock = new Set(['a']);
+
+  it('does nothing when nothing changed', () => {
+    const e = entry('a', d1);
+    expect(planResync([entryId(e)], [e], inStock, now, false)).toEqual({ cancel: [], schedule: [] });
+  });
+
+  it('replaces an entry whose date changed', () => {
+    const oldId = entryId(entry('a', d1));
+    const next = entry('a', d2);
+    expect(planResync([oldId], [next], inStock, now, false)).toEqual({ cancel: [oldId], schedule: [next] });
+  });
+
+  it('keeps a past-due pending id for an in-stock item', () => {
+    const due = entryId(entry('a', new Date(2026, 10, 17, 9, 30)));
+    expect(planResync([due], [], inStock, now, false).cancel).toEqual([]);
+  });
+
+  it('cancels a past-due id for an item no longer in stock', () => {
+    const due = entryId(entry('gone', new Date(2026, 10, 17, 9, 30)));
+    expect(planResync([due], [], inStock, now, false).cancel).toEqual([due]);
+  });
+
+  it('leaves non-managed ids untouched', () => {
+    expect(planResync(['random-uuid', 'test'], [], inStock, now, false)).toEqual({ cancel: [], schedule: [] });
+    expect(planResync(['random-uuid'], [], inStock, now, true).cancel).toEqual([]);
+  });
+
+  it('forceAll cancels all managed ids and schedules everything', () => {
+    const e = entry('a', d1);
+    const id = entryId(e);
+    const other = entryId(entry('a', d2));
+    expect(planResync([id, other, 'x'], [e], inStock, now, true)).toEqual({
+      cancel: [id, other],
+      schedule: [e],
+    });
   });
 });

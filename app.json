@@ -21,7 +21,8 @@
       "package": "be.openfridge.app",
       "permissions": [
         "CAMERA",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM"
       ]
     },
     "web": {

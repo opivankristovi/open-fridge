@@ -1,8 +1,9 @@
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import * as Device from 'expo-device';
 import { router } from 'expo-router';
-import { Alert, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, AppState, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '../../auth/AuthProvider';
 import { Chip } from '../../components/Chip';
@@ -27,7 +28,9 @@ import { errorMessage } from '../../lib/errors';
 import {
   cancelAllNotifications,
   ensurePermission,
+  getExactAlarmStatus,
   getPermissionStatus,
+  requestExactAlarms,
   requestResync,
   sendTestNotification,
 } from '../../services/notifications';
@@ -59,6 +62,27 @@ export default function SettingsScreen() {
     getPermissionStatus().then(setPermission).catch(() => undefined);
   }, []);
   useEffect(refreshPermission, [refreshPermission]);
+
+  const [exactGranted, setExactGranted] = useState(true);
+  const refreshExact = useCallback(() => {
+    getExactAlarmStatus().then(setExactGranted).catch(() => undefined);
+  }, []);
+  useEffect(() => {
+    refreshExact();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        refreshExact();
+        refreshPermission();
+      }
+    });
+    return () => sub.remove();
+  }, [refreshExact, refreshPermission]);
+  const isXiaomi = /xiaomi|redmi|poco/i.test(Device.manufacturer ?? '');
+
+  const onExactAlarm = async () => {
+    await requestExactAlarms();
+    refreshExact();
+  };
 
   // --- category defaults: local copy, saved with a short debounce ---------------------------
   const [defaults, setDefaults] = useState<Defaults>({});
@@ -189,6 +213,22 @@ export default function SettingsScreen() {
             variant="outline"
             onPress={onPermission}
           />
+        ) : null}
+
+        <Text style={styles.label}>
+          {t.settings.exactAlarm}: {exactGranted ? t.settings.permissionGranted : t.settings.exactAlarmOff}
+        </Text>
+        {!exactGranted ? (
+          <>
+            <Text style={styles.info}>{t.settings.exactAlarmHint}</Text>
+            <Button title={t.settings.exactAlarmAllow} variant="outline" onPress={onExactAlarm} />
+          </>
+        ) : null}
+        {isXiaomi ? (
+          <>
+            <Text style={styles.info}>{t.settings.xiaomiHint}</Text>
+            <Button title={t.settings.openAppSettings} variant="outline" onPress={() => void Linking.openSettings()} />
+          </>
         ) : null}
         <Button title={t.settings.testNotification} variant="outline" onPress={onTest} />
         {info ? <Text style={styles.info}>{info}</Text> : null}
