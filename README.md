@@ -1,20 +1,35 @@
 # Open Fridge
 
-Open Fridge is an Android app that keeps track of what is in your fridge. You scan a product's barcode, take a photo, enter the date printed on the package, and the app warns you before the food goes off. Several people can share one fridge, each on their own phone.
+Open Fridge is an Android app that keeps track of the food in your home: in the fridge, the freezer, the pantry, the cellar or wherever you keep it. You scan a product's barcode, take a photo, enter the date printed on the package, and the app warns you before the food goes off. Everyone in a household shares the same stock, each on their own phone.
 
-Android only (iOS is not configured or tested). The app interface is in Dutch.
+Android only (iOS is not configured or tested). The interface is in Dutch, English, French and German and follows the phone's language.
+
+<p>
+  <img src="docs/screenshots/stock-freezer.png" width="220" alt="Stock list filtered on the freezer">
+  <img src="docs/screenshots/add.png" width="220" alt="Adding a product and choosing where it is stored">
+  <img src="docs/screenshots/move.png" width="220" alt="Moving a product to the freezer with a new shelf life">
+</p>
 
 ## Features
 
-- Scan a barcode with the camera. The product name, brand and picture are looked up on Open Food Facts.
-- Take a photo of the item.
-- Set the printed expiry date with a date picker.
-- Fresh products and opened packages are tracked by days in the fridge or days since opening. Each category has a default number of days, and you can change these defaults per household. For opened packages you can also choose "tot datum op verpakking" (until the date on the package).
-- The list is sorted by expiry date and uses colours to show the status of each item.
-- Local notifications before an item expires. You choose how many days before and at what time, per phone.
-- History of what you ate and what you threw away.
-- Households: several phones share one fridge using a 6-character invite code. Data is stored in Supabase (accounts, database with row-level security, realtime updates, private photo storage).
-- Dark mode: Systeem, Licht or Donker, chosen per phone.
+- **Storage places.** A household can have several fridges, freezers, pantries, cellars, storage rooms or other places (for example a fridge in the kitchen and one in the garage). The stock list has a chip per place to filter on, and each product shows where it is.
+- **Moving products.** Move a product to another place in a few taps. Moving it to a different kind of place (fridge to freezer, for instance) proposes a new shelf life for that place, which you can adjust before you confirm.
+- **Barcode scanning.** The product name, brand and picture are looked up on Open Food Facts, in the language of the phone where available.
+- **Photos** of each product.
+- **Shelf life.** Use the date printed on the package, or a number of days for fresh products and opened packages. Every kind of place has its own default number of days per category (meat keeps 2 days in a fridge and 4 months in a freezer), and you can change these defaults for your household. For opened packages you can also choose "until the date on the package".
+- **Categories:** vegetables, fruit, meat, fish, dairy, cheese, leftovers, sauces, drinks, dry goods, canned & jarred, bread & bakery, ready meals, snacks & sweets and other.
+- **Status at a glance.** The list is sorted by expiry date and uses colours to show the status of each product.
+- **Reminders on time.** Local notifications before a product expires. You choose how many days before and at what time, per phone. Notifications name the place when you have more than one.
+- **History** of what was eaten and what was thrown away in the last 30 days.
+- **Households.** Several phones share one household using a 6-character invite code. Data is stored in Supabase (accounts, database with row-level security, realtime updates, private photo storage).
+- **Languages:** Dutch, English, French and German, following the system language (or the per-app language on Android 13 and later).
+- **Dark mode:** System, Light or Dark, chosen per phone.
+
+<p>
+  <img src="docs/screenshots/stock-pantry.png" width="220" alt="Stock list filtered on the pantry">
+  <img src="docs/screenshots/settings-locations.png" width="220" alt="Managing storage places in Settings">
+  <img src="docs/screenshots/settings-shelflife.png" width="220" alt="Default shelf life per kind of storage place">
+</p>
 
 ## What it costs
 
@@ -50,7 +65,9 @@ npm install
 ### 3. Set up Supabase
 
 1. In Supabase, create a new project. Pick any name and region, and save the database password somewhere safe.
-2. Open **SQL Editor** in the left menu. Open the file `supabase/migrations/0001_init.sql` from this repository, copy all of it, paste it into the editor and click **Run**. Do this once. It creates the tables, the security rules and the private `photos` storage bucket. Then do the same with `supabase/migrations/0002_storage_locations.sql`: it adds storage locations (several fridges, freezers, pantries, cellars and so on). If you already have an installation from before this feature, run only `0002_storage_locations.sql`; your existing items are kept and placed in a fridge. Install the new app version on **every** phone of the household before anyone uses the new categories (dry goods, canned & jarred, bread & bakery, ready meals, snacks & sweets): older app versions crash on items in those categories.
+2. Open **SQL Editor** in the left menu. Open the file `supabase/migrations/0001_init.sql` from this repository, copy all of it, paste it into the editor and click **Run**. It creates the tables, the security rules and the private `photos` storage bucket. Then do the same with `supabase/migrations/0002_storage_locations.sql`, which adds storage places. Run each file once, in this order.
+
+   Already running an older version of Open Fridge (fridge only)? Run only `0002_storage_locations.sql`. Your existing products are kept and placed in a fridge. Then install the new app on **every** phone of a household before anyone in that household uses the new categories (dry goods, canned & jarred, bread & bakery, ready meals, snacks & sweets): older app versions crash on products in those categories. Other households are not affected.
 3. Go to **Authentication**, then **Sign In / Providers**, then **Email**, and turn **off** "Confirm email". The app has no screen for handling confirmation links. With the setting on, the link in the email opens `localhost` on your phone and fails. Turning it off is safe: row-level security means an account can only see the households it belongs to, so a fake email address gives access to nothing.
 4. Go to **Project Settings**, then **API Keys**, and note two values:
    - **Project URL**: the base address, like `https://xxxx.supabase.co`. Do not use the one ending in `/rest/v1/`.
@@ -125,11 +142,20 @@ For the people who will use the app:
 2. When Android asks, allow "install unknown apps" for the app you opened the file from (for example Files or Chrome).
 3. If Google Play Protect warns about an unknown developer, tap **More details**, then **Install anyway**.
 
+A newer APK of the same build installs over the old one as an update: you stay logged in and keep your settings. This only works when both APKs were signed with the same key (the same EAS project). Some of the warnings above can appear again.
+
 First use:
 
 1. Create an account with any email address and a password.
-2. One person creates a household. Everyone else chooses "Deelnemen met code" and types the 6-character code shown in **Instellingen** on the first phone.
+2. One person creates a household. Everyone else chooses **Join with a code** and types the 6-character code shown in **Settings** on the first phone.
 3. Allow the camera when you add your first item, and allow notifications. Without that permission there are no expiry warnings.
+4. In **Settings**, tap **Allow** under "Notifications on time" and switch on "Allow setting alarms and reminders". Without it, Android (14 and later) may deliver reminders up to an hour late.
+5. On Xiaomi, Redmi and POCO phones, also turn on **Autostart** for Open Fridge and set the battery saver to **No restrictions** (Settings shows a button that opens the right screen). Reminders work without it, but the background refresh that picks up products your housemates add while the app is closed may be blocked.
+6. Add more storage places (freezer, pantry, and so on) under **Settings > Storage places**. A new household starts with one fridge.
+
+<p>
+  <img src="docs/screenshots/settings-notifications.png" width="220" alt="Notification settings with exact timing allowed">
+</p>
 
 ## How it works
 
@@ -151,12 +177,15 @@ Security:
 - Row-level security is on for every table. A row is visible only to members of its household, checked by the security-definer function `is_member(household_id)`.
 - Households are created and joined only through the functions `create_household`, `join_household` and `regenerate_invite_code`. Direct inserts into `households` and `household_members` are not allowed.
 - Photos go in the private `photos` bucket at the path `{household_id}/{item_id}.jpg`. Storage policies check that the first path segment is a household you belong to.
-- Realtime is enabled on `items`, so other phones see changes immediately.
+- Realtime is enabled on `items` and `storage_locations`, so other phones see changes immediately.
+- Storage places are deleted only through the function `delete_storage_location`, which first moves the products still in stock to another place. The last place of a household cannot be deleted.
+- Items can only point to a storage place of their own household (composite foreign key). A database trigger puts items without a place (for example from an older app version) in the household's first fridge.
 
 ### Expiry and notifications
 
-- The expiry date of an item is the earliest of: the printed date, the opened date plus the days after opening, and the date added plus the days for fresh products. See `src/domain/expiry.ts`.
-- Notifications are scheduled locally on each phone. They are re-planned when the app starts, when it comes to the foreground, when items change, and about every 12 hours by a background task (`expo-background-task`).
+- The expiry date of an item is the earliest of: the printed date, the opened date plus the days after opening, and the date it was stored in its current place plus the days for fresh products. Moving a product to another kind of place restarts those clocks (`stored_at`). See `src/domain/expiry.ts`.
+- Default shelf life comes from a table per kind of place and category (`src/domain/shelfLife.ts`), overridden per household in `household_settings.shelf_defaults`.
+- Notifications are scheduled locally on each phone as exact alarms (with the "Alarms & reminders" permission). They are re-planned when the app starts, when it comes to the foreground, when items change, and about every 12 hours by a background task (`expo-background-task`). Re-planning only adds new and removes outdated reminders, so a reminder that is due but not yet delivered is never lost. See `planResync` in `src/services/schedule.ts`.
 
 ### Project structure
 
@@ -165,15 +194,17 @@ src/
   app/          screens and navigation (Expo Router): login, register, household, tabs, add, item
   components/   reusable UI parts
   data/         Supabase queries, React Query hooks, realtime, local preferences
-  domain/       plain logic without UI: expiry rules, categories, formatting
+  domain/       plain logic without UI: expiry rules, shelf-life table, categories, storage places, formatting
   services/     Open Food Facts lookup, photos, notifications, scheduling, background sync
   auth/         login state
   lib/          Supabase client, query client, error helpers
-  i18n/         Dutch texts
+  i18n/         texts in Dutch (source), English, French and German; language detection
   types/        database types
   theme.ts      light and dark colours
 supabase/
   migrations/   database setup SQL
+docs/
+  screenshots/  images used in this README
 ```
 
 ## Development
