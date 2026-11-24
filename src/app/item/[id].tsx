@@ -18,7 +18,7 @@ import {
 } from '../../data/hooks';
 import { usePrefs } from '../../data/localPrefs';
 import { setProductOpenedDays } from '../../data/productsRepo';
-import { CATEGORIES, shelfDefaults } from '../../domain/categories';
+import { CATEGORIES, categoryLabel, shelfDefaults } from '../../domain/categories';
 import {
   daysInFridge,
   daysLeft,
@@ -27,7 +27,7 @@ import {
   expiryStatus,
 } from '../../domain/expiry';
 import { formatLongDate, formatShortDate } from '../../domain/format';
-import { dagen, nl } from '../../i18n/nl';
+import { t } from '../../i18n';
 import { errorMessage } from '../../lib/errors';
 import { makeStyles, spacing } from '../../theme';
 
@@ -67,8 +67,8 @@ export default function ItemDetailScreen() {
           <Spinner />
         ) : (
           <>
-            <Text style={styles.goneText}>{nl.item.gone}</Text>
-            <Button title={nl.add.back} variant="outline" onPress={() => router.back()} />
+            <Text style={styles.goneText}>{t.item.gone}</Text>
+            <Button title={t.add.back} variant="outline" onPress={() => router.back()} />
           </>
         )}
       </View>
@@ -78,7 +78,7 @@ export default function ItemDetailScreen() {
   const status = expiryStatus(data, prefs.warnDays);
   const left = daysLeft(data);
   const eff = effectiveExpiry(data);
-  const adder = members.data?.find((m) => m.user_id === data.added_by)?.display_name ?? nl.history.unknownUser;
+  const adder = members.data?.find((m) => m.user_id === data.added_by)?.display_name ?? t.history.unknownUser;
   const opened = daysOpen(data);
 
   const run = async (fn: () => Promise<unknown>, leave: boolean) => {
@@ -90,7 +90,7 @@ export default function ItemDetailScreen() {
       else setBusy(false);
     } catch (e) {
       setBusy(false);
-      setError(errorMessage(e) || nl.item.actionFailed);
+      setError(errorMessage(e) || t.item.actionFailed);
     }
   };
 
@@ -104,10 +104,10 @@ export default function ItemDetailScreen() {
     }, false);
 
   const confirmDelete = () =>
-    Alert.alert(nl.item.removeTitle, nl.item.removeBody, [
-      { text: nl.common.cancel, style: 'cancel' },
+    Alert.alert(t.item.removeTitle, t.item.removeBody, [
+      { text: t.common.cancel, style: 'cancel' },
       {
-        text: nl.item.remove,
+        text: t.item.remove,
         style: 'destructive',
         onPress: () => void run(() => deleteItem.mutateAsync(data), true),
       },
@@ -121,24 +121,24 @@ export default function ItemDetailScreen() {
         <Text style={styles.name}>{data.name}</Text>
         {data.brand ? <Text style={styles.brand}>{data.brand}</Text> : null}
         <Text style={styles.meta}>
-          {CATEGORIES[data.category].label} · {nl.item.quantity(data.quantity)}
+          {categoryLabel(data.category)} · {t.item.quantity(data.quantity)}
         </Text>
       </View>
 
       <Card>
         <StatusBadge status={status} daysLeft={left} />
         <Text style={styles.until}>
-          {eff ? nl.item.until(formatLongDate(eff.date)) : nl.item.noExpiry}
+          {eff ? t.item.until(formatLongDate(eff.date)) : t.item.noExpiry}
         </Text>
-        {eff ? <Text style={styles.meta}>{nl.item.ruleSource[eff.rule]}</Text> : null}
+        {eff ? <Text style={styles.meta}>{t.item.ruleSource[eff.rule]}</Text> : null}
         <Text style={styles.meta}>
-          {nl.item.addedBy(formatShortDate(data.added_at), adder, dagen(daysInFridge(data)))}
+          {t.item.addedBy(formatShortDate(data.added_at), adder, t.days(daysInFridge(data)))}
         </Text>
         {data.opened_at && opened !== null ? (
           <Text style={styles.meta}>
             {data.opened_shelf_days === null
-              ? nl.item.openedUntilPackage(formatShortDate(data.opened_at))
-              : nl.item.openedOn(formatShortDate(data.opened_at), dagen(opened))}
+              ? t.item.openedUntilPackage(formatShortDate(data.opened_at))
+              : t.item.openedOn(formatShortDate(data.opened_at), t.days(opened))}
           </Text>
         ) : null}
       </Card>
@@ -146,13 +146,13 @@ export default function ItemDetailScreen() {
       {!data.opened_at && CATEGORIES[data.category].canOpen ? (
         showOpen ? (
           <Card>
-            <Text style={styles.label}>{nl.item.openedPanelTitle}</Text>
+            <Text style={styles.label}>{t.item.openedPanelTitle}</Text>
             <OpenedShelfInput value={openDays} onChange={setOpenDays} fallbackDays={categoryOpened ?? 3} />
-            <Button title={nl.item.confirmOpened} onPress={confirmOpened} loading={busy} />
-            <Button title={nl.common.cancel} variant="outline" onPress={() => setShowOpen(false)} disabled={busy} />
+            <Button title={t.item.confirmOpened} onPress={confirmOpened} loading={busy} />
+            <Button title={t.common.cancel} variant="outline" onPress={() => setShowOpen(false)} disabled={busy} />
           </Card>
         ) : (
-          <Button title={nl.item.markOpened} variant="outline" onPress={() => setShowOpen(true)} disabled={busy} />
+          <Button title={t.item.markOpened} variant="outline" onPress={() => setShowOpen(true)} disabled={busy} />
         )
       ) : null}
 
@@ -161,14 +161,14 @@ export default function ItemDetailScreen() {
       <View style={styles.actions}>
         <View style={styles.flex}>
           <Button
-            title={nl.item.consumed}
+            title={t.item.consumed}
             disabled={busy}
             onPress={() => run(() => removeItem.mutateAsync({ id: data.id, status: 'consumed' }), true)}
           />
         </View>
         <View style={styles.flex}>
           <Button
-            title={nl.item.discarded}
+            title={t.item.discarded}
             variant="outline"
             disabled={busy}
             onPress={() => run(() => removeItem.mutateAsync({ id: data.id, status: 'discarded' }), true)}
@@ -176,12 +176,12 @@ export default function ItemDetailScreen() {
         </View>
       </View>
       <Button
-        title={nl.item.edit}
+        title={t.item.edit}
         variant="outline"
         disabled={busy}
         onPress={() => router.push({ pathname: '/item/edit/[id]', params: { id: data.id } })}
       />
-      <Button title={nl.item.remove} variant="danger" disabled={busy} onPress={confirmDelete} />
+      <Button title={t.item.remove} variant="danger" disabled={busy} onPress={confirmDelete} />
     </ScrollView>
   );
 }

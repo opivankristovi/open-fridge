@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
+import { t } from '../i18n';
 import { getPrefs } from '../data/localPrefs';
 import { listInFridge } from '../data/itemsRepo';
 import { buildSchedule } from './schedule';
@@ -28,7 +29,7 @@ export async function setupNotifications(): Promise<void> {
     }),
   });
   await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-    name: 'Houdbaarheid',
+    name: t.notifications.channel,
     importance: Notifications.AndroidImportance.HIGH,
   });
 }

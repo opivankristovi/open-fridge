@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { nl } from '../i18n/nl';
+import { t } from '../i18n';
 import { compressPhoto } from '../services/photos';
 import { makeStyles, radius, spacing } from '../theme';
 import { Button, Spinner } from './ui';
@@ -15,7 +15,7 @@ type Props = {
   skipLabel?: string;
 };
 
-export function PhotoCapture({ onUse, onSkip, skipLabel = nl.add.skip }: Props) {
+export function PhotoCapture({ onUse, onSkip, skipLabel = t.add.skip }: Props) {
   const styles = useStyles();
   const [permission, requestPermission] = useCameraPermissions();
   const camera = useRef<CameraView>(null);
@@ -26,8 +26,8 @@ export function PhotoCapture({ onUse, onSkip, skipLabel = nl.add.skip }: Props) 
   if (!permission.granted) {
     return (
       <View style={styles.center}>
-        <Text style={styles.text}>{nl.add.cameraPermission}</Text>
-        <Button title={nl.add.allowCamera} onPress={requestPermission} />
+        <Text style={styles.text}>{t.add.cameraPermission}</Text>
+        <Button title={t.add.allowCamera} onPress={requestPermission} />
         {onSkip ? <Button title={skipLabel} variant="outline" onPress={onSkip} /> : null}
       </View>
     );
@@ -63,10 +63,10 @@ export function PhotoCapture({ onUse, onSkip, skipLabel = nl.add.skip }: Props) 
         <Image source={{ uri: preview }} style={styles.camera} contentFit="cover" />
         <View style={styles.actions}>
           <View style={styles.flex}>
-            <Button title={nl.add.retake} variant="outline" onPress={() => setPreview(null)} disabled={busy} />
+            <Button title={t.add.retake} variant="outline" onPress={() => setPreview(null)} disabled={busy} />
           </View>
           <View style={styles.flex}>
-            <Button title={nl.add.usePhoto} onPress={use} loading={busy} />
+            <Button title={t.add.usePhoto} onPress={use} loading={busy} />
           </View>
         </View>
         {onSkip ? <Button title={skipLabel} variant="outline" onPress={onSkip} disabled={busy} /> : null}
@@ -77,7 +77,7 @@ export function PhotoCapture({ onUse, onSkip, skipLabel = nl.add.skip }: Props) 
   return (
     <View style={styles.flex}>
       <CameraView ref={camera} style={styles.camera} facing="back" />
-      <Button title={nl.add.takePhoto} onPress={take} loading={busy} />
+      <Button title={t.add.takePhoto} onPress={take} loading={busy} />
       {onSkip ? <Button title={skipLabel} variant="outline" onPress={onSkip} /> : null}
     </View>
   );

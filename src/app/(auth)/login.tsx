@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Alert } from 'react-native';
 
 import { Button, ErrorText, Field, LinkText, Screen, Subtitle, Title } from '../../components/ui';
-import { nl } from '../../i18n/nl';
+import { t } from '../../i18n';
 import { errorMessage } from '../../lib/errors';
 import { supabase } from '../../lib/supabase';
 
@@ -17,7 +17,7 @@ export default function LoginScreen() {
   async function onLogin() {
     setError(null);
     if (!email.trim() || !password) {
-      setError(nl.auth.fillAll);
+      setError(t.auth.fillAll);
       return;
     }
     setBusy(true);
@@ -32,7 +32,7 @@ export default function LoginScreen() {
   async function onForgot() {
     setError(null);
     if (!email.trim()) {
-      setError(nl.auth.enterEmail);
+      setError(t.auth.enterEmail);
       return;
     }
     const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim());
@@ -40,15 +40,15 @@ export default function LoginScreen() {
       setError(errorMessage(err));
       return;
     }
-    Alert.alert(nl.auth.resetTitle, nl.auth.resetSent);
+    Alert.alert(t.auth.resetTitle, t.auth.resetSent);
   }
 
   return (
     <Screen>
-      <Title>{nl.auth.loginTitle}</Title>
-      <Subtitle>{nl.auth.loginSubtitle}</Subtitle>
+      <Title>{t.auth.loginTitle}</Title>
+      <Subtitle>{t.auth.loginSubtitle}</Subtitle>
       <Field
-        label={nl.auth.email}
+        label={t.auth.email}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -56,7 +56,7 @@ export default function LoginScreen() {
         keyboardType="email-address"
       />
       <Field
-        label={nl.auth.password}
+        label={t.auth.password}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -64,9 +64,9 @@ export default function LoginScreen() {
         autoComplete="password"
       />
       <ErrorText message={error} />
-      <Button title={nl.auth.login} onPress={onLogin} loading={busy} />
-      <LinkText title={nl.auth.forgotPassword} onPress={onForgot} />
-      <LinkText title={nl.auth.noAccount} onPress={() => router.push('/(auth)/register')} />
+      <Button title={t.auth.login} onPress={onLogin} loading={busy} />
+      <LinkText title={t.auth.forgotPassword} onPress={onForgot} />
+      <LinkText title={t.auth.noAccount} onPress={() => router.push('/(auth)/register')} />
     </Screen>
   );
 }

@@ -10,6 +10,9 @@ import {
   type ExpiryInput,
 } from '../expiry';
 import { CATEGORIES, categoryFromOff, shelfDefaults } from '../categories';
+import { setLanguage } from '../../i18n/strings';
+
+beforeAll(() => setLanguage('nl'));
 
 const now = new Date(2026, 10, 17, 10, 0); // 17 nov 2026, 10:00 local
 
@@ -167,6 +170,15 @@ describe('describeDaysLeft', () => {
     expect(describeDaysLeft(4)).toBe('nog 4 dagen');
     expect(describeDaysLeft(-1)).toBe('1 dag over datum');
     expect(describeDaysLeft(-3)).toBe('3 dagen over datum');
+  });
+  it('follows the active language', () => {
+    const dutch = describeDaysLeft(2);
+    setLanguage('en');
+    try {
+      expect(describeDaysLeft(2)).not.toBe(dutch);
+    } finally {
+      setLanguage('nl');
+    }
   });
 });
 

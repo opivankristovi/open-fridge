@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { CATEGORIES, type CategoryKey } from '../domain/categories';
-import { nl } from '../i18n/nl';
+import { CATEGORIES, categoryLabel, type CategoryKey } from '../domain/categories';
+import { t } from '../i18n';
 import { makeStyles, radius, spacing } from '../theme';
 
 const KEYS = Object.keys(CATEGORIES) as CategoryKey[];
@@ -34,9 +34,9 @@ export function CategoryChips({
   return (
     <View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-        {allowAll ? <Chip label={nl.fridge.all} selected={value === null} onPress={() => onChange(null)} /> : null}
+        {allowAll ? <Chip label={t.fridge.all} selected={value === null} onPress={() => onChange(null)} /> : null}
         {KEYS.map((k) => (
-          <Chip key={k} label={CATEGORIES[k].label} selected={value === k} onPress={() => onChange(k)} />
+          <Chip key={k} label={categoryLabel(k)} selected={value === k} onPress={() => onChange(k)} />
         ))}
       </ScrollView>
     </View>

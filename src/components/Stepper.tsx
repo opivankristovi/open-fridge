@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { t } from '../i18n';
 import { makeStyles, useColors, radius, spacing } from '../theme';
 
 type Props = {
@@ -20,7 +21,7 @@ export function Stepper({ value, onChange, min = 0, max = 999, step = 1, format 
     <View style={styles.row}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Minder"
+        accessibilityLabel={t.stepper.less}
         onPress={() => onChange(clamp(value - step))}
         disabled={value <= min}
         style={[styles.btn, value <= min && styles.disabled]}
@@ -30,7 +31,7 @@ export function Stepper({ value, onChange, min = 0, max = 999, step = 1, format 
       <Text style={styles.value}>{format ? format(value) : String(value)}</Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Meer"
+        accessibilityLabel={t.stepper.more}
         onPress={() => onChange(clamp(value + step))}
         disabled={value >= max}
         style={[styles.btn, value >= max && styles.disabled]}

@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { daysInFridge, daysOpen, type ExpiryStatus } from '../domain/expiry';
-import { nl } from '../i18n/nl';
+import { t } from '../i18n';
 import { makeStyles, radius, spacing } from '../theme';
 import type { Item } from '../types/db';
 import { ItemImage } from './ItemImage';
@@ -14,8 +14,8 @@ type Props = { item: Item; status: ExpiryStatus; daysLeft: number | null };
 function ItemRowBase({ item, status, daysLeft }: Props) {
   const styles = useStyles();
   const open = daysOpen(item);
-  const parts = [nl.fridge.inFridge(daysInFridge(item))];
-  if (open !== null) parts.push(nl.fridge.open(open));
+  const parts = [t.fridge.inFridge(daysInFridge(item))];
+  if (open !== null) parts.push(t.fridge.open(open));
   if (item.quantity > 1) parts.push(`×${item.quantity}`);
 
   return (

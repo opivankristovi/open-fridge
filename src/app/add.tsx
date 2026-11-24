@@ -21,7 +21,7 @@ import { useCreateItem, useHouseholdSettings } from '../data/hooks';
 import { getProduct, upsertProduct } from '../data/productsRepo';
 import { shelfDefaults, type CategoryKey } from '../domain/categories';
 import { errorMessage } from '../lib/errors';
-import { nl } from '../i18n/nl';
+import { t } from '../i18n';
 import { ensurePermission } from '../services/notifications';
 import { lookupBarcode } from '../services/openFoodFacts';
 import { deletePhoto, uploadItemPhoto } from '../services/photos';
@@ -224,12 +224,12 @@ export default function AddScreen() {
         }).catch(() => undefined);
       }
       if (photoFailed) {
-        Alert.alert(nl.add.photoFailedTitle, nl.add.photoFailed, [{ text: nl.common.ok, onPress: () => router.back() }]);
+        Alert.alert(t.add.photoFailedTitle, t.add.photoFailed, [{ text: t.common.ok, onPress: () => router.back() }]);
       } else {
         router.back();
       }
     } catch (e) {
-      setError(errorMessage(e) || nl.add.saveFailed);
+      setError(errorMessage(e) || t.add.saveFailed);
       setStep('expiry');
     }
   };
@@ -248,13 +248,13 @@ export default function AddScreen() {
           hitSlop={8}
         >
           <Ionicons name="chevron-back" size={22} color={c.primary} />
-          <Text style={styles.backText}>{nl.add.back}</Text>
+          <Text style={styles.backText}>{t.add.back}</Text>
         </Pressable>
         <View style={styles.dots}>
           {STEPS.map((s, i) => (
             <View key={s} style={styles.dotWrap}>
               <View style={[styles.dot, i <= stepIndex && styles.dotActive]} />
-              <Text style={[styles.dotLabel, i === stepIndex && styles.dotLabelActive]}>{nl.add.steps[s]}</Text>
+              <Text style={[styles.dotLabel, i === stepIndex && styles.dotLabelActive]}>{t.add.steps[s]}</Text>
             </View>
           ))}
         </View>
@@ -265,9 +265,9 @@ export default function AddScreen() {
           <Spinner />
         ) : !permission.granted ? (
           <View style={styles.padded}>
-            <Text style={styles.centerText}>{nl.add.cameraPermission}</Text>
-            <Button title={nl.add.allowCamera} onPress={requestPermission} />
-            <Button title={nl.add.noBarcode} variant="outline" onPress={skipScan} />
+            <Text style={styles.centerText}>{t.add.cameraPermission}</Text>
+            <Button title={t.add.allowCamera} onPress={requestPermission} />
+            <Button title={t.add.noBarcode} variant="outline" onPress={skipScan} />
           </View>
         ) : (
           <View style={styles.padded}>
@@ -277,8 +277,8 @@ export default function AddScreen() {
               barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e'] }}
               onBarcodeScanned={onScan}
             />
-            <Text style={styles.centerText}>{nl.add.scanHint}</Text>
-            <Button title={nl.add.noBarcode} variant="outline" onPress={skipScan} />
+            <Text style={styles.centerText}>{t.add.scanHint}</Text>
+            <Button title={t.add.noBarcode} variant="outline" onPress={skipScan} />
           </View>
         )
       ) : null}
@@ -287,30 +287,30 @@ export default function AddScreen() {
         lookup === 'loading' || lookup === 'idle' ? (
           <View style={styles.loading}>
             <Spinner />
-            <Text style={styles.centerText}>{nl.add.lookingUp}</Text>
+            <Text style={styles.centerText}>{t.add.lookingUp}</Text>
           </View>
         ) : (
           <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-            {lookup === 'notfound' && barcode ? <Text style={styles.notice}>{nl.add.notFound}</Text> : null}
+            {lookup === 'notfound' && barcode ? <Text style={styles.notice}>{t.add.notFound}</Text> : null}
             {lookup === 'found' ? (
-              <Text style={styles.notice}>{fromHousehold ? nl.add.foundHousehold : nl.add.found}</Text>
+              <Text style={styles.notice}>{fromHousehold ? t.add.foundHousehold : t.add.found}</Text>
             ) : null}
             <Field
-              label={nl.add.name}
+              label={t.add.name}
               value={name}
-              onChangeText={(t) => {
-                setName(t);
-                if (t.trim()) setNameError(false);
+              onChangeText={(text) => {
+                setName(text);
+                if (text.trim()) setNameError(false);
               }}
               autoCapitalize="sentences"
             />
-            {nameError ? <ErrorText message={nl.add.nameRequired} /> : null}
-            <Field label={nl.add.brand} value={brand} onChangeText={setBrand} autoCapitalize="words" />
-            <Text style={styles.label}>{nl.add.category}</Text>
+            {nameError ? <ErrorText message={t.add.nameRequired} /> : null}
+            <Field label={t.add.brand} value={brand} onChangeText={setBrand} autoCapitalize="words" />
+            <Text style={styles.label}>{t.add.category}</Text>
             <CategoryChips value={category} onChange={(cat) => cat && setCategory(cat)} />
-            <Text style={styles.label}>{nl.add.quantity}</Text>
+            <Text style={styles.label}>{t.add.quantity}</Text>
             <Stepper value={quantity} min={1} max={999} onChange={setQuantity} />
-            <Button title={nl.add.next} onPress={toPhoto} />
+            <Button title={t.add.next} onPress={toPhoto} />
           </ScrollView>
         )
       ) : null}
@@ -325,7 +325,7 @@ export default function AddScreen() {
         <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
           {expiry ? <ExpiryForm value={expiry} onChange={setExpiry} category={category} /> : null}
           <ErrorText message={error} />
-          <Button title={step === 'save' ? nl.add.saving : nl.add.save} onPress={save} loading={step === 'save'} />
+          <Button title={step === 'save' ? t.add.saving : t.add.save} onPress={save} loading={step === 'save'} />
         </ScrollView>
       ) : null}
     </View>

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Text } from 'react-native';
 
 import { Button, ErrorText, Field, LinkText, Screen, Title } from '../../components/ui';
-import { nl } from '../../i18n/nl';
+import { t } from '../../i18n';
 import { errorMessage } from '../../lib/errors';
 import { supabase } from '../../lib/supabase';
 import { useColors } from '../../theme';
@@ -22,15 +22,15 @@ export default function RegisterScreen() {
     setError(null);
     setNotice(null);
     if (!email.trim() || !password || !repeat) {
-      setError(nl.auth.fillAll);
+      setError(t.auth.fillAll);
       return;
     }
     if (password.length < 8) {
-      setError(nl.auth.passwordTooShort);
+      setError(t.auth.passwordTooShort);
       return;
     }
     if (password !== repeat) {
-      setError(nl.auth.passwordMismatch);
+      setError(t.auth.passwordMismatch);
       return;
     }
     setBusy(true);
@@ -40,14 +40,14 @@ export default function RegisterScreen() {
       setError(errorMessage(err));
       return;
     }
-    if (!data.session) setNotice(nl.auth.checkEmail);
+    if (!data.session) setNotice(t.auth.checkEmail);
   }
 
   return (
     <Screen>
-      <Title>{nl.auth.registerTitle}</Title>
+      <Title>{t.auth.registerTitle}</Title>
       <Field
-        label={nl.auth.email}
+        label={t.auth.email}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -55,7 +55,7 @@ export default function RegisterScreen() {
         keyboardType="email-address"
       />
       <Field
-        label={nl.auth.password}
+        label={t.auth.password}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -63,7 +63,7 @@ export default function RegisterScreen() {
         autoComplete="new-password"
       />
       <Field
-        label={nl.auth.repeatPassword}
+        label={t.auth.repeatPassword}
         value={repeat}
         onChangeText={setRepeat}
         secureTextEntry
@@ -74,8 +74,8 @@ export default function RegisterScreen() {
       {notice ? (
         <Text style={{ color: c.primary, fontSize: 15, fontWeight: '600' }}>{notice}</Text>
       ) : null}
-      <Button title={nl.auth.register} onPress={onRegister} loading={busy} />
-      <LinkText title={nl.auth.haveAccount} onPress={() => router.back()} />
+      <Button title={t.auth.register} onPress={onRegister} loading={busy} />
+      <LinkText title={t.auth.haveAccount} onPress={() => router.back()} />
     </Screen>
   );
 }

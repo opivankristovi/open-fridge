@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { AuthProvider, useAuth } from '../auth/AuthProvider';
 import { Spinner } from '../components/ui';
-import { nl } from '../i18n/nl';
+import { t, useSystemLanguage } from '../i18n';
 import { getPrefs, applyTheme } from '../data/localPrefs';
 import { queryClient } from '../lib/queryClient';
 import '../services/backgroundSync';
@@ -33,15 +33,16 @@ function RootNavigator() {
       </Stack.Protected>
       <Stack.Protected guard={signedIn && hasHousehold}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="add" options={{ presentation: 'modal', headerShown: true, title: nl.add.title }} />
-        <Stack.Screen name="item/[id]" options={{ headerShown: true, title: nl.item.title }} />
-        <Stack.Screen name="item/edit/[id]" options={{ headerShown: true, title: nl.edit.title }} />
+        <Stack.Screen name="add" options={{ presentation: 'modal', headerShown: true, title: t.add.title }} />
+        <Stack.Screen name="item/[id]" options={{ headerShown: true, title: t.item.title }} />
+        <Stack.Screen name="item/edit/[id]" options={{ headerShown: true, title: t.edit.title }} />
       </Stack.Protected>
     </Stack>
   );
 }
 
 export default function RootLayout() {
+  const lang = useSystemLanguage();
   const c = useColors();
   const dark = c === darkColors;
 
@@ -49,6 +50,11 @@ export default function RootLayout() {
   useEffect(() => {
     getPrefs().then((p) => applyTheme(p.theme)).catch(() => undefined);
   }, []);
+
+  // Refresh the Android notification channel name when the system language changes.
+  useEffect(() => {
+    setupNotifications().catch(() => undefined);
+  }, [lang]);
 
   const navTheme = useMemo(() => {
     const base = dark ? DarkTheme : DefaultTheme;
@@ -70,7 +76,7 @@ export default function RootLayout() {
       <AuthProvider>
         <ThemeProvider value={navTheme}>
           <StatusBar style="auto" />
-          <RootNavigator />
+          <RootNavigator key={lang} />
         </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>

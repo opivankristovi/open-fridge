@@ -1,4 +1,7 @@
 import { parseOffResponse } from '../openFoodFacts';
+import { setLanguage } from '../../i18n/strings';
+
+beforeAll(() => setLanguage('nl'));
 
 describe('parseOffResponse', () => {
   it('maps a found product (nl name, first brand, https image, category)', () => {

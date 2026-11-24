@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { nl } from '../i18n/nl';
+import { t } from '../i18n';
 import { makeStyles, radius, spacing } from '../theme';
 import { Stepper } from './Stepper';
 
@@ -30,7 +30,7 @@ export function OpenedShelfInput({ value, onChange, fallbackDays }: Props) {
             style={[styles.item, isDays === days && styles.itemActive]}
           >
             <Text style={[styles.text, isDays === days && styles.textActive]}>
-              {days ? nl.openedInput.days : nl.openedInput.package}
+              {days ? t.openedInput.days : t.openedInput.package}
             </Text>
           </Pressable>
         ))}

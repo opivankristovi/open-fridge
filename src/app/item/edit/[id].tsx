@@ -18,7 +18,7 @@ import { Stepper } from '../../../components/Stepper';
 import { Button, ErrorText, Field, Spinner } from '../../../components/ui';
 import { useHouseholdSettings, useItem, useUpdateItem } from '../../../data/hooks';
 import type { CategoryKey } from '../../../domain/categories';
-import { nl } from '../../../i18n/nl';
+import { t } from '../../../i18n';
 import { errorMessage } from '../../../lib/errors';
 import { uploadItemPhoto } from '../../../services/photos';
 import { makeStyles, spacing } from '../../../theme';
@@ -59,8 +59,8 @@ export default function EditItemScreen() {
   if (!data || data.status !== 'in_fridge' || !expiry) {
     return (
       <View style={styles.gone}>
-        <Text style={styles.goneText}>{nl.item.gone}</Text>
-        <Button title={nl.add.back} variant="outline" onPress={() => router.back()} />
+        <Text style={styles.goneText}>{t.item.gone}</Text>
+        <Button title={t.add.back} variant="outline" onPress={() => router.back()} />
       </View>
     );
   }
@@ -74,7 +74,7 @@ export default function EditItemScreen() {
             setCapturing(false);
           }}
           onSkip={() => setCapturing(false)}
-          skipLabel={nl.common.cancel}
+          skipLabel={t.common.cancel}
         />
       </View>
     );
@@ -82,7 +82,7 @@ export default function EditItemScreen() {
 
   const save = async () => {
     if (!name.trim()) {
-      setError(nl.add.nameRequired);
+      setError(t.add.nameRequired);
       return;
     }
     setError(null);
@@ -108,7 +108,7 @@ export default function EditItemScreen() {
       router.back();
     } catch (e) {
       setSaving(false);
-      setError(errorMessage(e) || nl.add.saveFailed);
+      setError(errorMessage(e) || t.add.saveFailed);
     }
   };
 
@@ -117,25 +117,25 @@ export default function EditItemScreen() {
       contentContainerStyle={[styles.content, { paddingBottom: spacing.md + insets.bottom }]}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.label}>{nl.edit.currentPhoto}</Text>
+      <Text style={styles.label}>{t.edit.currentPhoto}</Text>
       {newPhoto ? (
         <Image source={{ uri: newPhoto }} style={styles.preview} contentFit="cover" />
       ) : (
         <ItemImage item={{ ...data, category }} size={160} fill />
       )}
-      <Button title={nl.edit.newPhoto} variant="outline" onPress={() => setCapturing(true)} disabled={saving} />
+      <Button title={t.edit.newPhoto} variant="outline" onPress={() => setCapturing(true)} disabled={saving} />
 
-      <Field label={nl.add.name} value={name} onChangeText={setName} autoCapitalize="sentences" />
-      <Field label={nl.add.brand} value={brand} onChangeText={setBrand} autoCapitalize="words" />
-      <Text style={styles.label}>{nl.add.category}</Text>
+      <Field label={t.add.name} value={name} onChangeText={setName} autoCapitalize="sentences" />
+      <Field label={t.add.brand} value={brand} onChangeText={setBrand} autoCapitalize="words" />
+      <Text style={styles.label}>{t.add.category}</Text>
       <CategoryChips value={category} onChange={(cat) => cat && setCategory(cat)} />
-      <Text style={styles.label}>{nl.add.quantity}</Text>
+      <Text style={styles.label}>{t.add.quantity}</Text>
       <Stepper value={quantity} min={1} max={999} onChange={setQuantity} />
 
       <ExpiryForm value={expiry} onChange={setExpiry} addedAt={data.added_at} openedAt={data.opened_at} category={category} />
 
       <ErrorText message={error} />
-      <Button title={nl.edit.save} onPress={save} loading={saving} />
+      <Button title={t.edit.save} onPress={save} loading={saving} />
     </ScrollView>
   );
 }

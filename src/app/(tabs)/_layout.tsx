@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../auth/AuthProvider';
 import { useRealtimeItems } from '../../data/useRealtimeItems';
-import { nl } from '../../i18n/nl';
+import { t } from '../../i18n';
 import { registerBackgroundSync } from '../../services/backgroundSync';
 import {
   setCurrentHousehold,
@@ -49,21 +49,21 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: nl.tabs.fridge,
+          title: t.tabs.fridge,
           tabBarIcon: ({ color, size }) => <Ionicons name="snow-outline" size={size} color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
-          title: nl.tabs.history,
+          title: t.tabs.history,
           tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: nl.tabs.settings,
+          title: t.tabs.settings,
           tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color as string} />,
         }}
       />

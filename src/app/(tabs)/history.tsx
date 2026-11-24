@@ -5,7 +5,7 @@ import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'rea
 import { Card, Spinner } from '../../components/ui';
 import { useHistory, useMembers, useRestoreItem } from '../../data/hooks';
 import { formatShortDate } from '../../domain/format';
-import { nl } from '../../i18n/nl';
+import { t } from '../../i18n';
 import { makeStyles, useColors, radius, spacing } from '../../theme';
 import type { Item } from '../../types/db';
 
@@ -46,15 +46,15 @@ export default function HistoryScreen() {
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} colors={[c.primary]} progressBackgroundColor={c.surface} />}
       ListHeaderComponent={
         <Card>
-          <Text style={styles.summaryTitle}>{nl.history.title}</Text>
-          <Text style={styles.summary}>{nl.history.summary(eaten, tossed)}</Text>
+          <Text style={styles.summaryTitle}>{t.history.title}</Text>
+          <Text style={styles.summary}>{t.history.summary(eaten, tossed)}</Text>
         </Card>
       }
-      ListEmptyComponent={<Text style={styles.empty}>{nl.history.empty}</Text>}
+      ListEmptyComponent={<Text style={styles.empty}>{t.history.empty}</Text>}
       ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
       renderItem={({ item }) => {
         const consumed = item.status === 'consumed';
-        const who = (item.removed_by && names.get(item.removed_by)) || nl.history.unknownUser;
+        const who = (item.removed_by && names.get(item.removed_by)) || t.history.unknownUser;
         return (
           <View style={styles.row}>
             <Ionicons
@@ -67,7 +67,7 @@ export default function HistoryScreen() {
                 {item.name}
               </Text>
               <Text style={styles.meta} numberOfLines={1}>
-                {item.removed_at ? formatShortDate(item.removed_at) : ''} · {nl.history.by(who)}
+                {item.removed_at ? formatShortDate(item.removed_at) : ''} · {t.history.by(who)}
               </Text>
             </View>
             <Pressable
@@ -76,7 +76,7 @@ export default function HistoryScreen() {
               onPress={() => onRestore(item)}
               style={[styles.restore, restoringId === item.id && { opacity: 0.5 }]}
             >
-              <Text style={styles.restoreText}>{nl.history.restore}</Text>
+              <Text style={styles.restoreText}>{t.history.restore}</Text>
             </Pressable>
           </View>
         );

@@ -7,7 +7,7 @@ import { useHouseholdSettings } from '../data/hooks';
 import { CATEGORIES, shelfDefaults, type CategoryKey, type CategoryOverrides } from '../domain/categories';
 import { describeDaysLeft, effectiveExpiry, parseLocalDate, type ExpiryInput } from '../domain/expiry';
 import { formatLongDate, formatYmd, toYmd } from '../domain/format';
-import { nl } from '../i18n/nl';
+import { t } from '../i18n';
 import { makeStyles, useColors, radius, spacing } from '../theme';
 import type { Item } from '../types/db';
 import { OpenedShelfInput } from './OpenedShelfInput';
@@ -105,11 +105,11 @@ export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Pro
   };
   const eff = effectiveExpiry(draft);
   const preview = eff
-    ? nl.expiry.previewUntil(
+    ? t.expiry.previewUntil(
         formatLongDate(eff.date),
         describeDaysLeft(differenceInCalendarDays(eff.date, new Date())),
       )
-    : nl.expiry.previewNone;
+    : t.expiry.previewNone;
 
   return (
     <View style={styles.wrap}>
@@ -123,7 +123,7 @@ export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Pro
             style={[styles.segmentItem, value.mode === m && styles.segmentItemActive]}
           >
             <Text style={[styles.segmentText, value.mode === m && styles.segmentTextActive]}>
-              {m === 'date' ? nl.expiry.modeDate : nl.expiry.modeFresh}
+              {m === 'date' ? t.expiry.modeDate : t.expiry.modeFresh}
             </Text>
           </Pressable>
         ))}
@@ -131,14 +131,14 @@ export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Pro
 
       {value.mode === 'date' ? (
         <View style={styles.block}>
-          <Text style={styles.label}>{nl.expiry.date}</Text>
+          <Text style={styles.label}>{t.expiry.date}</Text>
           <Pressable accessibilityRole="button" onPress={openPicker} style={styles.dateButton}>
             <Text style={styles.dateText}>{formatYmd(value.expiryDate)}</Text>
           </Pressable>
         </View>
       ) : (
         <View style={styles.block}>
-          <Text style={styles.label}>{nl.expiry.freshDays}</Text>
+          <Text style={styles.label}>{t.expiry.freshDays}</Text>
           <Stepper value={value.freshDays} min={0} max={3650} onChange={(n) => set({ freshDays: n })} />
         </View>
       )}
@@ -146,7 +146,7 @@ export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Pro
       {canOpen ? (
         <>
           <View style={styles.switchRow}>
-            <Text style={styles.label}>{nl.expiry.alreadyOpened}</Text>
+            <Text style={styles.label}>{t.expiry.alreadyOpened}</Text>
             <Switch
               value={value.opened}
               onValueChange={(v) => set({ opened: v })}
@@ -155,14 +155,14 @@ export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Pro
           </View>
           {value.opened ? (
             <View style={styles.block}>
-              <Text style={styles.label}>{nl.expiry.openedDays}</Text>
+              <Text style={styles.label}>{t.expiry.openedDays}</Text>
               <OpenedShelfInput
                 value={value.openedDays}
                 onChange={(n) => set({ openedDays: n })}
                 fallbackDays={fallbackDays}
               />
               {value.mode === 'fresh' && value.openedDays === null ? (
-                <Text style={styles.hint}>{nl.expiry.openedNullHint}</Text>
+                <Text style={styles.hint}>{t.expiry.openedNullHint}</Text>
               ) : null}
             </View>
           ) : null}

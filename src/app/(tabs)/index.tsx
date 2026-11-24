@@ -10,7 +10,7 @@ import { usePrefs } from '../../data/localPrefs';
 import { useFridgeItems } from '../../data/hooks';
 import type { CategoryKey } from '../../domain/categories';
 import { daysLeft, expiryStatus, type ExpiryStatus } from '../../domain/expiry';
-import { nl } from '../../i18n/nl';
+import { t } from '../../i18n';
 import { makeStyles, useColors, radius, spacing } from '../../theme';
 import type { Item } from '../../types/db';
 
@@ -40,7 +40,7 @@ export default function FridgeScreen() {
       }));
     return ORDER.map((key) => ({
       key,
-      title: nl.fridge.sections[key],
+      title: t.fridge.sections[key],
       data: rows
         .filter((r) => r.status === key)
         .sort((a, b) =>
@@ -63,7 +63,7 @@ export default function FridgeScreen() {
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder={nl.fridge.searchPlaceholder}
+            placeholder={t.fridge.searchPlaceholder}
             placeholderTextColor={c.textMuted}
             style={styles.search}
             autoCorrect={false}
@@ -84,13 +84,13 @@ export default function FridgeScreen() {
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} colors={[c.primary]} progressBackgroundColor={c.surface} />}
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
-          <Text style={styles.empty}>{isEmpty ? nl.fridge.empty : nl.fridge.noResults}</Text>
+          <Text style={styles.empty}>{isEmpty ? t.fridge.empty : t.fridge.noResults}</Text>
         }
       />
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={nl.add.title}
+        accessibilityLabel={t.add.title}
         onPress={() => router.push('/add')}
         style={({ pressed }) => [styles.fab, pressed && { opacity: 0.9 }]}
       >

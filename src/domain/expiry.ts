@@ -1,4 +1,5 @@
 import { addDays, differenceInCalendarDays, setHours, startOfDay, subDays } from 'date-fns';
+import { t } from '../i18n/strings';
 import type { Item } from '../types/db';
 
 export type ExpiryInput = Pick<
@@ -62,11 +63,7 @@ export function daysOpen(i: ExpiryInput, now: Date = new Date()): number | null 
 }
 
 export function describeDaysLeft(n: number): string {
-  if (n === 0) return 'vandaag laatste dag';
-  if (n === 1) return 'nog 1 dag';
-  if (n > 1) return `nog ${n} dagen`;
-  if (n === -1) return '1 dag over datum';
-  return `${-n} dagen over datum`;
+  return t.daysLeft(n);
 }
 
 export function notificationTriggers(
@@ -82,6 +79,6 @@ export function notificationTriggers(
   if (warnDays > 0) out.push({ date: at(subDays(e.date, warnDays)), kind: 'warn' });
   out.push({ date: at(e.date), kind: 'expiry' });
   return out
-    .filter((t) => t.date.getTime() > now.getTime())
+    .filter((trig) => trig.date.getTime() > now.getTime())
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }

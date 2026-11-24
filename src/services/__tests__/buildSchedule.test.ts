@@ -1,4 +1,7 @@
 import { buildSchedule, MAX_SCHEDULED, type ScheduleItem } from '../schedule';
+import { setLanguage } from '../../i18n/strings';
+
+beforeAll(() => setLanguage('nl'));
 
 const now = new Date(2026, 10, 17, 10, 0); // 17 nov 2026, 10:00 local
 const prefs = { warnDays: 2, notifyHour: 9 };

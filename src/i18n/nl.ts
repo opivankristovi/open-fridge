@@ -1,4 +1,38 @@
 export const nl = {
+  /** date-fns format patterns (see src/domain/format.ts) */
+  dateFormats: {
+    long: 'EEEE d MMMM',
+    short: 'd MMM yyyy',
+    full: 'EEEE d MMMM yyyy',
+  },
+  days: (n: number) => dagen(n),
+  daysLeft: (n: number) => {
+    if (n === 0) return 'vandaag laatste dag';
+    if (n > 0) return `nog ${dagen(n)}`;
+    return `${dagen(-n)} over datum`;
+  },
+  categories: {
+    groenten: 'Groenten',
+    fruit: 'Fruit',
+    vlees: 'Vlees',
+    vis: 'Vis',
+    zuivel: 'Zuivel',
+    kaas: 'Kaas',
+    restjes: 'Restjes',
+    sauzen: 'Sauzen',
+    dranken: 'Dranken',
+    overig: 'Overig',
+  },
+  notifications: {
+    channel: 'Houdbaarheid',
+    warnTitle: 'Bijna over datum',
+    expiryTitle: 'Laatste dag',
+    expiryBody: (name: string) => `${name} moet vandaag op of weg`,
+  },
+  stepper: {
+    less: 'Minder',
+    more: 'Meer',
+  },
   common: {
     loading: 'Laden...',
     cancel: 'Annuleren',
@@ -194,8 +228,9 @@ export const nl = {
   },
 };
 
-export function dagen(n: number): string {
+function dagen(n: number): string {
   return n === 1 ? '1 dag' : `${n} dagen`;
 }
 
-export type Nl = typeof nl;
+/** Shape every translation must match. */
+export type Strings = typeof nl;

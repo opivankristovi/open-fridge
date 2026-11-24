@@ -1,4 +1,5 @@
 import { categoryFromOff } from '../domain/categories';
+import { lang } from '../i18n/strings';
 import type { CategoryKey } from '../types/db';
 
 export type OffProduct = {
@@ -13,6 +14,9 @@ type OffResponse = {
   product?: {
     product_name?: string;
     product_name_nl?: string;
+    product_name_en?: string;
+    product_name_fr?: string;
+    product_name_de?: string;
     brands?: string;
     image_front_small_url?: string;
     image_front_url?: string;
@@ -27,7 +31,8 @@ export function parseOffResponse(json: unknown): OffProduct | null {
   const res = json as OffResponse | null | undefined;
   if (!res || res.status !== 1 || !res.product) return null;
   const p = res.product;
-  const name = clean(p.product_name_nl) || clean(p.product_name);
+  const localized = (p as Record<string, unknown>)[`product_name_${lang}`];
+  const name = clean(localized) || clean(p.product_name) || clean(p.product_name_nl);
   if (!name) return null;
   const brand = clean(p.brands).split(',')[0]?.trim() || null;
   const image = p.image_front_url ?? p.image_front_small_url ?? null;
@@ -40,7 +45,7 @@ export function parseOffResponse(json: unknown): OffProduct | null {
   };
 }
 
-const FIELDS = 'product_name,product_name_nl,brands,image_front_small_url,image_front_url,categories_tags';
+const FIELDS = 'product_name,product_name_nl,product_name_en,product_name_fr,product_name_de,brands,image_front_small_url,image_front_url,categories_tags';
 
 export async function lookupBarcode(code: string): Promise<OffProduct | null> {
   const controller = new AbortController();

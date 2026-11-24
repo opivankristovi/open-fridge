@@ -9,8 +9,8 @@ import { Button, Card, ErrorText, LinkText, Screen, Subtitle } from '../../compo
 import { regenerateInviteCode } from '../../data/householdRepo';
 import { useHouseholdSettings, useMembers, useUpdateCategoryDefaults } from '../../data/hooks';
 import { usePrefs, type ThemePref } from '../../data/localPrefs';
-import { CATEGORIES, shelfDefaults, type CategoryKey } from '../../domain/categories';
-import { nl } from '../../i18n/nl';
+import { CATEGORIES, categoryLabel, shelfDefaults, type CategoryKey } from '../../domain/categories';
+import { t } from '../../i18n';
 import { errorMessage } from '../../lib/errors';
 import {
   cancelAllNotifications,
@@ -73,7 +73,7 @@ export default function SettingsScreen() {
         onSuccess: () => {
           dirty.current = false;
         },
-        onError: () => setError(nl.settings.saveFailed),
+        onError: () => setError(t.settings.saveFailed),
       });
     }, 600);
   };
@@ -96,14 +96,14 @@ export default function SettingsScreen() {
 
   const onTest = async () => {
     setInfo(null);
-    const ok = await sendTestNotification(nl.settings.testTitle, nl.settings.testBody);
+    const ok = await sendTestNotification(t.settings.testTitle, t.settings.testBody);
     refreshPermission();
-    setInfo(ok ? nl.settings.testSent : nl.settings.testNoPermission);
+    setInfo(ok ? t.settings.testSent : t.settings.testNoPermission);
   };
 
   const onShare = () => {
     if (!household) return;
-    void Share.share({ message: nl.settings.shareMessage(household.invite_code) });
+    void Share.share({ message: t.settings.shareMessage(household.invite_code) });
   };
 
   const onNewCode = async () => {
@@ -114,7 +114,7 @@ export default function SettingsScreen() {
       await regenerateInviteCode(household.id);
       await refreshHousehold();
     } catch (e) {
-      setError(errorMessage(e) || nl.settings.newCodeFailed);
+      setError(errorMessage(e) || t.settings.newCodeFailed);
     } finally {
       setCodeBusy(false);
     }
@@ -127,27 +127,27 @@ export default function SettingsScreen() {
 
   const permissionLabel =
     permission === 'granted'
-      ? nl.settings.permissionGranted
+      ? t.settings.permissionGranted
       : permission === 'denied'
-        ? nl.settings.permissionDenied
-        : nl.settings.permissionUndetermined;
+        ? t.settings.permissionDenied
+        : t.settings.permissionUndetermined;
 
   return (
     <Screen bottomInset={false}>
       <Card>
-        <Text style={styles.heading}>{nl.settings.notifications}</Text>
-        <Subtitle>{nl.settings.notificationsHint}</Subtitle>
+        <Text style={styles.heading}>{t.settings.notifications}</Text>
+        <Subtitle>{t.settings.notificationsHint}</Subtitle>
 
-        <Text style={styles.label}>{nl.settings.warnDays}</Text>
+        <Text style={styles.label}>{t.settings.warnDays}</Text>
         <Stepper
           value={prefs.warnDays}
           min={0}
           max={7}
           onChange={(n) => changePrefs({ warnDays: n })}
-          format={nl.settings.warnDaysValue}
+          format={t.settings.warnDaysValue}
         />
 
-        <Text style={styles.label}>{nl.settings.notifyHour}</Text>
+        <Text style={styles.label}>{t.settings.notifyHour}</Text>
         <Stepper
           value={prefs.notifyHour}
           min={6}
@@ -157,54 +157,54 @@ export default function SettingsScreen() {
         />
 
         <Text style={styles.label}>
-          {nl.settings.permission}: {permissionLabel}
+          {t.settings.permission}: {permissionLabel}
         </Text>
         {permission !== 'granted' ? (
           <Button
-            title={permission === 'denied' ? nl.settings.permissionOpenSettings : nl.settings.permissionRequest}
+            title={permission === 'denied' ? t.settings.permissionOpenSettings : t.settings.permissionRequest}
             variant="outline"
             onPress={onPermission}
           />
         ) : null}
-        <Button title={nl.settings.testNotification} variant="outline" onPress={onTest} />
+        <Button title={t.settings.testNotification} variant="outline" onPress={onTest} />
         {info ? <Text style={styles.info}>{info}</Text> : null}
       </Card>
 
       <Card>
-        <Text style={styles.heading}>{nl.settings.appearance}</Text>
-        <Subtitle>{nl.settings.appearanceHint}</Subtitle>
+        <Text style={styles.heading}>{t.settings.appearance}</Text>
+        <Subtitle>{t.settings.appearanceHint}</Subtitle>
         <Segmented<ThemePref>
           value={prefs.theme}
           options={[
-            { value: 'system', label: nl.settings.themeSystem },
-            { value: 'light', label: nl.settings.themeLight },
-            { value: 'dark', label: nl.settings.themeDark },
+            { value: 'system', label: t.settings.themeSystem },
+            { value: 'light', label: t.settings.themeLight },
+            { value: 'dark', label: t.settings.themeDark },
           ]}
           onChange={(theme) => void update({ theme })}
         />
       </Card>
 
       <Card>
-        <Text style={styles.heading}>{nl.settings.shelfLife}</Text>
-        <Subtitle>{nl.settings.shelfLifeHint}</Subtitle>
+        <Text style={styles.heading}>{t.settings.shelfLife}</Text>
+        <Subtitle>{t.settings.shelfLifeHint}</Subtitle>
         <Text style={styles.explain}>
-          <Text style={styles.bold}>{nl.settings.explainFreshLabel}</Text>
-          {nl.settings.explainFresh}
-          <Text style={styles.bold}>{nl.settings.explainOpenedLabel}</Text>
-          {nl.settings.explainOpened}
+          <Text style={styles.bold}>{t.settings.explainFreshLabel}</Text>
+          {t.settings.explainFresh}
+          <Text style={styles.bold}>{t.settings.explainOpenedLabel}</Text>
+          {t.settings.explainOpened}
         </Text>
         {KEYS.map((cat) => {
           const d = shelfDefaults(cat, defaults);
           return (
             <View key={cat} style={styles.catBlock}>
-              <Text style={styles.catName}>{CATEGORIES[cat].label}</Text>
+              <Text style={styles.catName}>{categoryLabel(cat)}</Text>
               <View style={styles.catRow}>
-                <Text style={styles.catLabel}>{nl.settings.fresh}</Text>
+                <Text style={styles.catLabel}>{t.settings.fresh}</Text>
                 <Stepper value={d.fresh} min={0} max={365} onChange={(n) => changeDefault(cat, 'fresh', n)} />
               </View>
               {CATEGORIES[cat].canOpen ? (
                 <View style={styles.catBlockInner}>
-                  <Text style={styles.catLabel}>{nl.settings.opened}</Text>
+                  <Text style={styles.catLabel}>{t.settings.opened}</Text>
                   <OpenedShelfInput
                     value={d.opened}
                     onChange={(n) => changeDefault(cat, 'opened', n)}
@@ -213,7 +213,7 @@ export default function SettingsScreen() {
                 </View>
               ) : null}
               {defaults[cat] ? (
-                <LinkText title={nl.settings.resetDefault} onPress={() => resetDefault(cat)} />
+                <LinkText title={t.settings.resetDefault} onPress={() => resetDefault(cat)} />
               ) : null}
             </View>
           );
@@ -221,38 +221,38 @@ export default function SettingsScreen() {
       </Card>
 
       <Card>
-        <Text style={styles.heading}>{nl.settings.household}</Text>
+        <Text style={styles.heading}>{t.settings.household}</Text>
         <Text style={styles.householdName}>{household?.name}</Text>
-        <Subtitle>{nl.settings.inviteCode}</Subtitle>
+        <Subtitle>{t.settings.inviteCode}</Subtitle>
         <Text selectable style={styles.code}>
           {household?.invite_code}
         </Text>
-        <Subtitle>{nl.settings.inviteHint}</Subtitle>
-        <Button title={nl.settings.share} onPress={onShare} />
+        <Subtitle>{t.settings.inviteHint}</Subtitle>
+        <Button title={t.settings.share} onPress={onShare} />
         {membership?.role === 'owner' ? (
           <Button
-            title={nl.settings.newCode}
+            title={t.settings.newCode}
             variant="outline"
             loading={codeBusy}
             onPress={() =>
-              Alert.alert(nl.settings.newCode, nl.settings.inviteHint, [
-                { text: nl.common.cancel, style: 'cancel' },
-                { text: nl.settings.newCode, onPress: () => void onNewCode() },
+              Alert.alert(t.settings.newCode, t.settings.inviteHint, [
+                { text: t.common.cancel, style: 'cancel' },
+                { text: t.settings.newCode, onPress: () => void onNewCode() },
               ])
             }
           />
         ) : null}
         <ErrorText message={error} />
-        <Text style={styles.label}>{nl.settings.members}</Text>
+        <Text style={styles.label}>{t.settings.members}</Text>
         {(members.data ?? []).map((m) => (
           <Text key={m.user_id} style={styles.member}>
             {m.display_name}
-            {m.role === 'owner' ? ` (${nl.settings.owner})` : ''}
+            {m.role === 'owner' ? ` (${t.settings.owner})` : ''}
           </Text>
         ))}
       </Card>
 
-      <Button title={nl.settings.logout} variant="danger" onPress={onLogout} />
+      <Button title={t.settings.logout} variant="danger" onPress={onLogout} />
     </Screen>
   );
 }
