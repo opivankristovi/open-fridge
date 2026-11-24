@@ -124,7 +124,7 @@ export const fr: Strings = {
       fresh: 'produit frais',
     },
     addedBy: (date: string, who: string, days: string) =>
-      `Ajouté le ${date} par ${who} — ${days} à la maison`,
+      `Ajouté le ${date} par ${who}${days ? ` — ${days} à la maison` : ''}`,
     openedOn: (date: string, days: string) => `Ouvert le ${date} (${days})`,
     markOpened: 'Ouvert',
     openedPanelTitle: 'Conservation après ouverture',

@@ -64,7 +64,7 @@ export const en: Strings = {
       ok: 'Good',
       onbekend: 'No date',
     },
-    inHouse: (n: number) => `${days(n)} at home`,
+    inHouse: (n: number) => (n === 0 ? 'added today' : `${days(n)} at home`),
     open: (n: number) => `${days(n)} open`,
   },
   add: {
@@ -124,7 +124,7 @@ export const en: Strings = {
       fresh: 'fresh product',
     },
     addedBy: (date: string, who: string, days: string) =>
-      `Added ${date} by ${who} — ${days} at home`,
+      `Added ${date} by ${who}${days ? ` — ${days} at home` : ''}`,
     openedOn: (date: string, days: string) => `Opened on ${date} (${days})`,
     markOpened: 'Opened',
     openedPanelTitle: 'Keeps after opening',

@@ -146,7 +146,7 @@ export default function ItemDetailScreen() {
         </Text>
         {eff ? <Text style={styles.meta}>{t.item.ruleSource[eff.rule]}</Text> : null}
         <Text style={styles.meta}>
-          {t.item.addedBy(formatShortDate(data.added_at), adder, t.days(daysInHouse(data)))}
+          {t.item.addedBy(formatShortDate(data.added_at), adder, daysInHouse(data) > 0 ? t.days(daysInHouse(data)) : '')}
         </Text>
         {data.opened_at && opened !== null ? (
           <Text style={styles.meta}>

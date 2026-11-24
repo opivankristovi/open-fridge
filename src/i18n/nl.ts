@@ -62,7 +62,7 @@ export const nl = {
       ok: 'In orde',
       onbekend: 'Geen datum',
     },
-    inHouse: (n: number) => `${dagen(n)} in huis`,
+    inHouse: (n: number) => (n === 0 ? 'vandaag toegevoegd' : `${dagen(n)} in huis`),
     open: (n: number) => `${dagen(n)} open`,
   },
   add: {
@@ -122,7 +122,7 @@ export const nl = {
       fresh: 'vers product',
     },
     addedBy: (date: string, who: string, days: string) =>
-      `Toegevoegd ${date} door ${who} — ${days} in huis`,
+      `Toegevoegd ${date} door ${who}${days ? ` — ${days} in huis` : ''}`,
     openedOn: (date: string, days: string) => `Geopend op ${date} (${days})`,
     markOpened: 'Geopend',
     openedPanelTitle: 'Houdbaar na openen',

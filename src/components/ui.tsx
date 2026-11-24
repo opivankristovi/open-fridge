@@ -19,8 +19,11 @@ import { makeStyles, useColors, radius, spacing } from '../theme';
 export function Screen({
   children,
   bottomInset = true,
+  top = false,
 }: {
   children: React.ReactNode;
+  /** Start the content at the top instead of centring it (forms below a header). */
+  top?: boolean;
   /** Reserve space for the Android system buttons. Set false inside the tab navigator (the tab bar handles it). */
   bottomInset?: boolean;
 }) {
@@ -33,7 +36,7 @@ export function Screen({
     >
       <ScrollView
         style={styles.flex}
-        contentContainerStyle={[styles.screen, bottomInset && { paddingBottom: spacing.lg + insets.bottom }]}
+        contentContainerStyle={[styles.screen, top && styles.top, bottomInset && { paddingBottom: spacing.lg + insets.bottom }]}
         keyboardShouldPersistTaps="handled"
       >
         {children}
@@ -156,6 +159,7 @@ export function Placeholder({ text }: { text: string }) {
 const useStyles = makeStyles((c) => StyleSheet.create({
   flex: { flex: 1, backgroundColor: c.background },
   screen: { padding: spacing.lg, gap: spacing.md, flexGrow: 1, justifyContent: 'center' },
+  top: { justifyContent: 'flex-start' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.background },
   card: {
     backgroundColor: c.surface,

@@ -64,7 +64,7 @@ export const de: Strings = {
       ok: 'In Ordnung',
       onbekend: 'Kein Datum',
     },
-    inHouse: (n: number) => `${tage(n)} im Haus`,
+    inHouse: (n: number) => (n === 0 ? 'heute hinzugefügt' : `${tage(n)} im Haus`),
     open: (n: number) => `${tage(n)} offen`,
   },
   add: {
@@ -124,7 +124,7 @@ export const de: Strings = {
       fresh: 'frisches Produkt',
     },
     addedBy: (date: string, who: string, days: string) =>
-      `Hinzugefügt am ${date} von ${who} — ${days} im Haus`,
+      `Hinzugefügt am ${date} von ${who}${days ? ` — ${days} im Haus` : ''}`,
     openedOn: (date: string, days: string) => `Geöffnet am ${date} (${days})`,
     markOpened: 'Geöffnet',
     openedPanelTitle: 'Haltbar nach dem Öffnen',

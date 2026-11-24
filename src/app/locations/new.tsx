@@ -25,7 +25,7 @@ export default function NewLocationScreen() {
   };
 
   return (
-    <Screen>
+    <Screen top>
       <LocationForm name={name} onNameChange={setName} kind={kind} onKindChange={setKind} />
       <ErrorText message={error} />
       <Button title={t.locations.save} onPress={save} loading={create.isPending} />

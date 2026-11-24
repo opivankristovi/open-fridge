@@ -75,7 +75,7 @@ export default function EditLocationScreen() {
   };
 
   return (
-    <Screen>
+    <Screen top>
       <LocationForm name={formName} onNameChange={setName} kind={formKind} onKindChange={setKind} />
       <Text style={styles.count}>{t.locations.itemCount(count)}</Text>
       <ErrorText message={error} />
