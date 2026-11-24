@@ -1,6 +1,18 @@
 import type { CategoryKey } from '../domain/categories';
+import type { LocationKind } from '../domain/locations';
+import type { ShelfOverrides } from '../domain/shelfLife';
 
-export type { CategoryKey };
+export type { CategoryKey, LocationKind };
+
+export type StorageLocation = {
+  id: string;
+  household_id: string;
+  /** null = show the translated label of the kind */
+  name: string | null;
+  kind: LocationKind;
+  created_at: string;
+  updated_at: string;
+};
 
 export type Household = {
   id: string;
@@ -32,6 +44,10 @@ export type Item = {
   category: CategoryKey;
   quantity: number;
   added_at: string;
+  /** null only for history rows whose location was deleted */
+  location_id: string | null;
+  /** when the item entered its current location (= added_at if never moved) */
+  stored_at: string;
   /** 'YYYY-MM-DD' */
   expiry_date: string | null;
   opened_at: string | null;
@@ -56,7 +72,7 @@ export type HouseholdProduct = {
 
 export type HouseholdSettings = {
   household_id: string;
-  category_defaults: Partial<Record<CategoryKey, { fresh?: number; opened?: number | null }>>;
+  shelf_defaults: ShelfOverrides;
 };
 
 /** Result of the membership read with joined household. */

@@ -16,8 +16,9 @@ import { ItemImage } from '../../../components/ItemImage';
 import { PhotoCapture } from '../../../components/PhotoCapture';
 import { Stepper } from '../../../components/Stepper';
 import { Button, ErrorText, Field, Spinner } from '../../../components/ui';
-import { useHouseholdSettings, useItem, useUpdateItem } from '../../../data/hooks';
+import { useHouseholdSettings, useItem, useLocations, useUpdateItem } from '../../../data/hooks';
 import type { CategoryKey } from '../../../domain/categories';
+import type { LocationKind } from '../../../domain/locations';
 import { t } from '../../../i18n';
 import { errorMessage } from '../../../lib/errors';
 import { uploadItemPhoto } from '../../../services/photos';
@@ -28,11 +29,14 @@ export default function EditItemScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = useItem(id);
   const settings = useHouseholdSettings();
+  const locations = useLocations();
   const updateItem = useUpdateItem();
   const qc = useQueryClient();
   const insets = useSafeAreaInsets();
 
   const data = item.data;
+  const kind: LocationKind =
+    locations.data?.find((l) => l.id === data?.location_id)?.kind ?? 'fridge';
   const [ready, setReady] = useState(false);
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
@@ -46,16 +50,16 @@ export default function EditItemScreen() {
 
   // Initialise the form once, when the item first arrives.
   useEffect(() => {
-    if (ready || !data) return;
+    if (ready || !data || locations.isPending) return;
     setName(data.name);
     setBrand(data.brand ?? '');
     setCategory(data.category);
     setQuantity(data.quantity);
-    setExpiry(expiryValueFromItem(data, settings.data?.category_defaults));
+    setExpiry(expiryValueFromItem(data, kind, settings.data?.shelf_defaults));
     setReady(true);
-  }, [data, ready, settings.data]);
+  }, [data, ready, settings.data, kind, locations.isPending]);
 
-  if (item.isPending || (data && !ready)) return <Spinner />;
+  if (item.isPending || locations.isPending || (data && !ready)) return <Spinner />;
   if (!data || data.status !== 'in_fridge' || !expiry) {
     return (
       <View style={styles.gone}>
@@ -132,7 +136,7 @@ export default function EditItemScreen() {
       <Text style={styles.label}>{t.add.quantity}</Text>
       <Stepper value={quantity} min={1} max={999} onChange={setQuantity} />
 
-      <ExpiryForm value={expiry} onChange={setExpiry} addedAt={data.added_at} openedAt={data.opened_at} category={category} />
+      <ExpiryForm value={expiry} onChange={setExpiry} storedAt={data.stored_at} openedAt={data.opened_at} category={category} kind={kind} />
 
       <ErrorText message={error} />
       <Button title={t.edit.save} onPress={save} loading={saving} />

@@ -5,11 +5,13 @@ import { Pressable, RefreshControl, SectionList, StyleSheet, Text, TextInput, Vi
 
 import { CategoryChips } from '../../components/CategoryChips';
 import { ItemRow } from '../../components/ItemRow';
+import { LocationChips } from '../../components/LocationChips';
 import { Spinner } from '../../components/ui';
 import { usePrefs } from '../../data/localPrefs';
-import { useFridgeItems } from '../../data/hooks';
+import { useLocations, useStockItems } from '../../data/hooks';
 import type { CategoryKey } from '../../domain/categories';
 import { daysLeft, expiryStatus, type ExpiryStatus } from '../../domain/expiry';
+import { locationLabel } from '../../domain/locations';
 import { t } from '../../i18n';
 import { makeStyles, useColors, radius, spacing } from '../../theme';
 import type { Item } from '../../types/db';
@@ -19,18 +21,31 @@ type Section = { key: ExpiryStatus; title: string; data: Row[] };
 
 const ORDER: ExpiryStatus[] = ['verlopen', 'bijna', 'ok', 'onbekend'];
 
-export default function FridgeScreen() {
+export default function StockScreen() {
   const styles = useStyles();
   const c = useColors();
-  const { data, isPending, isRefetching, refetch } = useFridgeItems();
-  const { prefs } = usePrefs();
+  const { data, isPending, isRefetching, refetch } = useStockItems();
+  const locationsQuery = useLocations();
+  const { prefs, update } = usePrefs();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<CategoryKey | null>(null);
+
+  const locations = locationsQuery.data ?? [];
+  const multi = locations.length >= 2;
+  // A stored filter that no longer exists (location deleted) counts as "all".
+  const selected = multi && locations.some((l) => l.id === prefs.locationFilter) ? prefs.locationFilter : null;
+  const selectedLocation = selected ? locations.find((l) => l.id === selected) : undefined;
+  const locationNames = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const l of locationsQuery.data ?? []) m.set(l.id, locationLabel(l));
+    return m;
+  }, [locationsQuery.data]);
 
   const sections = useMemo<Section[]>(() => {
     const now = new Date();
     const q = search.trim().toLowerCase();
     const rows: Row[] = (data ?? [])
+      .filter((i) => (selected ? i.location_id === selected : true))
       .filter((i) => (category ? i.category === category : true))
       .filter((i) => (q ? `${i.name} ${i.brand ?? ''}`.toLowerCase().includes(q) : true))
       .map((item) => ({
@@ -49,11 +64,20 @@ export default function FridgeScreen() {
             : (a.daysLeft ?? 0) - (b.daysLeft ?? 0),
         ),
     })).filter((s) => s.data.length > 0);
-  }, [data, prefs.warnDays, search, category]);
+  }, [data, prefs.warnDays, search, category, selected]);
 
-  if (isPending) return <Spinner />;
+  if (isPending || locationsQuery.isPending) return <Spinner />;
 
   const isEmpty = (data ?? []).length === 0;
+  const locationEmpty = selectedLocation
+    ? !(data ?? []).some((i) => i.location_id === selected)
+    : false;
+  const emptyText =
+    selectedLocation && locationEmpty
+      ? t.locations.empty(locationLabel(selectedLocation))
+      : isEmpty
+        ? t.fridge.empty
+        : t.fridge.noResults;
 
   return (
     <View style={styles.container}>
@@ -70,28 +94,41 @@ export default function FridgeScreen() {
             returnKeyType="search"
           />
         </View>
+        {multi ? (
+          <LocationChips
+            locations={locations}
+            value={selected}
+            onChange={(id) => void update({ locationFilter: id })}
+            allowAll
+          />
+        ) : null}
         <CategoryChips value={category} onChange={setCategory} allowAll />
       </View>
 
       <SectionList
         sections={sections}
         keyExtractor={(r) => r.item.id}
-        renderItem={({ item: r }) => <ItemRow item={r.item} status={r.status} daysLeft={r.daysLeft} />}
+        renderItem={({ item: r }) => (
+          <ItemRow
+            item={r.item}
+            status={r.status}
+            daysLeft={r.daysLeft}
+            locationName={multi && !selected && r.item.location_id ? locationNames.get(r.item.location_id) : undefined}
+          />
+        )}
         renderSectionHeader={({ section }) => <Text style={styles.sectionTitle}>{section.title}</Text>}
         stickySectionHeadersEnabled={false}
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} colors={[c.primary]} progressBackgroundColor={c.surface} />}
         keyboardShouldPersistTaps="handled"
-        ListEmptyComponent={
-          <Text style={styles.empty}>{isEmpty ? t.fridge.empty : t.fridge.noResults}</Text>
-        }
+        ListEmptyComponent={<Text style={styles.empty}>{emptyText}</Text>}
       />
 
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t.add.title}
-        onPress={() => router.push('/add')}
+        onPress={() => router.push({ pathname: '/add', params: selected ? { locationId: selected } : {} })}
         style={({ pressed }) => [styles.fab, pressed && { opacity: 0.9 }]}
       >
         <Ionicons name="add" size={32} color={c.onPrimary} />

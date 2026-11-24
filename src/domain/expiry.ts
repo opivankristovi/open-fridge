@@ -4,7 +4,7 @@ import type { Item } from '../types/db';
 
 export type ExpiryInput = Pick<
   Item,
-  'added_at' | 'expiry_date' | 'opened_at' | 'opened_shelf_days' | 'fresh_shelf_days'
+  'added_at' | 'stored_at' | 'expiry_date' | 'opened_at' | 'opened_shelf_days' | 'fresh_shelf_days'
 >;
 export type ExpiryRule = 'printed' | 'opened' | 'fresh';
 export type ExpiryStatus = 'verlopen' | 'bijna' | 'ok' | 'onbekend';
@@ -13,6 +13,12 @@ export type ExpiryStatus = 'verlopen' | 'bijna' | 'ok' | 'onbekend';
 export function parseLocalDate(ymd: string): Date {
   const [y, m, d] = ymd.slice(0, 10).split('-').map(Number);
   return new Date(y, m - 1, d);
+}
+
+function openedClockStart(openedAt: string, storedAt: string): Date {
+  const o = new Date(openedAt);
+  const s = new Date(storedAt);
+  return s.getTime() > o.getTime() ? s : o;
 }
 
 const PRIORITY: Record<ExpiryRule, number> = { printed: 0, opened: 1, fresh: 2 };
@@ -24,13 +30,14 @@ export function effectiveExpiry(i: ExpiryInput): { date: Date; rule: ExpiryRule 
   }
   if (i.opened_at && i.opened_shelf_days != null) {
     candidates.push({
-      date: addDays(startOfDay(new Date(i.opened_at)), i.opened_shelf_days),
+      // an item opened before being moved starts its opened clock again at the move
+      date: addDays(startOfDay(openedClockStart(i.opened_at, i.stored_at)), i.opened_shelf_days),
       rule: 'opened',
     });
   }
   if (!i.expiry_date && i.fresh_shelf_days != null) {
     candidates.push({
-      date: addDays(startOfDay(new Date(i.added_at)), i.fresh_shelf_days),
+      date: addDays(startOfDay(new Date(i.stored_at)), i.fresh_shelf_days),
       rule: 'fresh',
     });
   }
@@ -54,7 +61,7 @@ export function expiryStatus(i: ExpiryInput, warnDays: number, now: Date = new D
   return 'ok';
 }
 
-export function daysInFridge(i: ExpiryInput, now: Date = new Date()): number {
+export function daysInHouse(i: ExpiryInput, now: Date = new Date()): number {
   return differenceInCalendarDays(now, new Date(i.added_at));
 }
 

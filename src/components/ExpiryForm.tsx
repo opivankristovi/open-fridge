@@ -4,9 +4,11 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { useHouseholdSettings } from '../data/hooks';
-import { CATEGORIES, shelfDefaults, type CategoryKey, type CategoryOverrides } from '../domain/categories';
+import { CATEGORIES, type CategoryKey } from '../domain/categories';
 import { describeDaysLeft, effectiveExpiry, parseLocalDate, type ExpiryInput } from '../domain/expiry';
 import { formatLongDate, formatYmd, toYmd } from '../domain/format';
+import type { LocationKind } from '../domain/locations';
+import { shelfDefaults, type ShelfOverrides } from '../domain/shelfLife';
 import { t } from '../i18n';
 import { makeStyles, useColors, radius, spacing } from '../theme';
 import type { Item } from '../types/db';
@@ -29,11 +31,12 @@ export type ExpiryFields = Pick<
 >;
 
 export function defaultExpiryValue(
+  kind: LocationKind,
   category: CategoryKey,
-  overrides: CategoryOverrides | null | undefined,
+  overrides: ShelfOverrides | null | undefined,
   productOpenedDays?: number | null,
 ): ExpiryValue {
-  const d = shelfDefaults(category, overrides);
+  const d = shelfDefaults(kind, category, overrides);
   return {
     mode: 'date',
     expiryDate: toYmd(addDays(new Date(), 7)),
@@ -45,9 +48,10 @@ export function defaultExpiryValue(
 
 export function expiryValueFromItem(
   item: Pick<Item, 'expiry_date' | 'fresh_shelf_days' | 'opened_at' | 'opened_shelf_days' | 'category'>,
-  overrides: CategoryOverrides | null | undefined,
+  kind: LocationKind,
+  overrides: ShelfOverrides | null | undefined,
 ): ExpiryValue {
-  const d = shelfDefaults(item.category, overrides);
+  const d = shelfDefaults(kind, item.category, overrides);
   const hasDate = !!item.expiry_date;
   return {
     mode: hasDate || item.fresh_shelf_days == null ? 'date' : 'fresh',
@@ -71,19 +75,20 @@ export function expiryValueToFields(v: ExpiryValue, existingOpenedAt?: string | 
 type Props = {
   value: ExpiryValue;
   onChange: (next: ExpiryValue) => void;
-  /** Used for the live preview of "fresh" items. Defaults to now. */
-  addedAt?: string;
+  /** When the item entered its location; used for the live preview of "fresh" items. Defaults to now. */
+  storedAt?: string;
   openedAt?: string | null;
   category: CategoryKey;
+  kind: LocationKind;
 };
 
-export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Props) {
+export function ExpiryForm({ value, onChange, storedAt, openedAt, category, kind }: Props) {
   const styles = useStyles();
   const c = useColors();
   const settings = useHouseholdSettings();
   const canOpen = CATEGORIES[category].canOpen;
   const fallbackDays =
-    shelfDefaults(category, settings.data?.category_defaults).opened ?? 3;
+    shelfDefaults(kind, category, settings.data?.shelf_defaults).opened ?? 3;
   useEffect(() => {
     if (!canOpen && value.opened) onChange({ ...value, opened: false });
   }, [canOpen, value, onChange]);
@@ -99,8 +104,10 @@ export function ExpiryForm({ value, onChange, addedAt, openedAt, category }: Pro
     });
   };
 
+  const now = new Date().toISOString();
   const draft: ExpiryInput = {
-    added_at: addedAt ?? new Date().toISOString(),
+    added_at: storedAt ?? now,
+    stored_at: storedAt ?? now,
     ...expiryValueToFields(value, openedAt),
   };
   const eff = effectiveExpiry(draft);

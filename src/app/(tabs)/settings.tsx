@@ -1,15 +1,27 @@
+import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Linking, Share, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { Alert, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '../../auth/AuthProvider';
+import { Chip } from '../../components/Chip';
 import { Segmented } from '../../components/Segmented';
 import { OpenedShelfInput } from '../../components/OpenedShelfInput';
 import { Stepper } from '../../components/Stepper';
 import { Button, Card, ErrorText, LinkText, Screen, Subtitle } from '../../components/ui';
 import { regenerateInviteCode } from '../../data/householdRepo';
-import { useHouseholdSettings, useMembers, useUpdateCategoryDefaults } from '../../data/hooks';
+import {
+  useHouseholdSettings,
+  useLocations,
+  useMembers,
+  useStockItems,
+  useUpdateShelfDefaults,
+} from '../../data/hooks';
 import { usePrefs, type ThemePref } from '../../data/localPrefs';
-import { CATEGORIES, categoryLabel, shelfDefaults, type CategoryKey } from '../../domain/categories';
+import { CATEGORIES, categoryLabel, type CategoryKey } from '../../domain/categories';
+import { KIND_ICONS, kindLabel, LOCATION_KINDS, locationLabel, type LocationKind } from '../../domain/locations';
+import { shelfDefaults } from '../../domain/shelfLife';
 import { t } from '../../i18n';
 import { errorMessage } from '../../lib/errors';
 import {
@@ -19,20 +31,24 @@ import {
   requestResync,
   sendTestNotification,
 } from '../../services/notifications';
-import { makeStyles, spacing } from '../../theme';
+import { makeStyles, useColors, radius, spacing } from '../../theme';
 import type { HouseholdSettings } from '../../types/db';
 
 const KEYS = Object.keys(CATEGORIES) as CategoryKey[];
 
-type Defaults = HouseholdSettings['category_defaults'];
+type Defaults = HouseholdSettings['shelf_defaults'];
 
 export default function SettingsScreen() {
   const styles = useStyles();
+  const c = useColors();
   const { household, membership, refreshHousehold, signOut } = useAuth();
   const { prefs, update } = usePrefs();
   const members = useMembers();
   const settings = useHouseholdSettings();
-  const saveDefaults = useUpdateCategoryDefaults();
+  const saveDefaults = useUpdateShelfDefaults();
+  const locationsQuery = useLocations();
+  const stock = useStockItems();
+  const [pickedKind, setPickedKind] = useState<LocationKind | null>(null);
 
   const [permission, setPermission] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
   const [info, setInfo] = useState<string | null>(null);
@@ -49,19 +65,27 @@ export default function SettingsScreen() {
   const dirty = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!dirty.current && settings.data) setDefaults(settings.data.category_defaults ?? {});
+    if (!dirty.current && settings.data) setDefaults(settings.data.shelf_defaults ?? {});
   }, [settings.data]);
 
+  const locations = locationsQuery.data ?? [];
+  const kinds = LOCATION_KINDS.filter((k) => locations.some((l) => l.kind === k));
+  const kind: LocationKind = pickedKind && kinds.includes(pickedKind) ? pickedKind : (kinds[0] ?? 'fridge');
+  const kindDefaults = defaults[kind] ?? {};
+
   const changeDefault = (cat: CategoryKey, field: 'fresh' | 'opened', value: number | null) => {
-    const current = shelfDefaults(cat, defaults);
+    const current = shelfDefaults(kind, cat, defaults);
     // An explicit null for `opened` is kept on purpose: it means "tot datum op verpakking".
-    persist({ ...defaults, [cat]: { fresh: current.fresh, opened: current.opened, [field]: value } });
+    persist({
+      ...defaults,
+      [kind]: { ...kindDefaults, [cat]: { fresh: current.fresh, opened: current.opened, [field]: value } },
+    });
   };
 
   const resetDefault = (cat: CategoryKey) => {
-    const rest = { ...defaults };
+    const rest = { ...kindDefaults };
     delete rest[cat];
-    persist(rest);
+    persist({ ...defaults, [kind]: rest });
   };
 
   const persist = (next: Defaults) => {
@@ -185,6 +209,35 @@ export default function SettingsScreen() {
       </Card>
 
       <Card>
+        <Text style={styles.heading}>{t.locations.title}</Text>
+        <Subtitle>{t.locations.hint}</Subtitle>
+        {locationsQuery.isPending ? <Text style={styles.info}>…</Text> : null}
+        {locations.map((l) => {
+          const n = (stock.data ?? []).filter((i) => i.location_id === l.id).length;
+          return (
+            <Pressable
+              key={l.id}
+              accessibilityRole="button"
+              onPress={() => router.push({ pathname: '/locations/[id]', params: { id: l.id } })}
+              style={({ pressed }) => [styles.locRow, pressed && { opacity: 0.85 }]}
+            >
+              <Ionicons
+                name={KIND_ICONS[l.kind] as React.ComponentProps<typeof Ionicons>['name']}
+                size={22}
+                color={c.primary}
+              />
+              <View style={styles.locBody}>
+                <Text style={styles.locName}>{locationLabel(l)}</Text>
+                <Text style={styles.locCount}>{kindLabel(l.kind)} · {t.locations.itemCount(n)}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
+            </Pressable>
+          );
+        })}
+        <LinkText title={t.locations.add} onPress={() => router.push('/locations/new')} />
+      </Card>
+
+      <Card>
         <Text style={styles.heading}>{t.settings.shelfLife}</Text>
         <Subtitle>{t.settings.shelfLifeHint}</Subtitle>
         <Text style={styles.explain}>
@@ -193,8 +246,15 @@ export default function SettingsScreen() {
           <Text style={styles.bold}>{t.settings.explainOpenedLabel}</Text>
           {t.settings.explainOpened}
         </Text>
+        {kinds.length > 1 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.kindRow}>
+            {kinds.map((k) => (
+              <Chip key={k} icon={KIND_ICONS[k]} label={kindLabel(k)} selected={kind === k} onPress={() => setPickedKind(k)} />
+            ))}
+          </ScrollView>
+        ) : null}
         {KEYS.map((cat) => {
-          const d = shelfDefaults(cat, defaults);
+          const d = shelfDefaults(kind, cat, defaults);
           return (
             <View key={cat} style={styles.catBlock}>
               <Text style={styles.catName}>{categoryLabel(cat)}</Text>
@@ -208,11 +268,11 @@ export default function SettingsScreen() {
                   <OpenedShelfInput
                     value={d.opened}
                     onChange={(n) => changeDefault(cat, 'opened', n)}
-                    fallbackDays={CATEGORIES[cat].opened ?? 3}
+                    fallbackDays={shelfDefaults(kind, cat, null).opened ?? 3}
                   />
                 </View>
               ) : null}
-              {defaults[cat] ? (
+              {kindDefaults[cat] ? (
                 <LinkText title={t.settings.resetDefault} onPress={() => resetDefault(cat)} />
               ) : null}
             </View>
@@ -261,6 +321,20 @@ const useStyles = makeStyles((c) => StyleSheet.create({
   heading: { fontSize: 18, fontWeight: '800', color: c.text },
   label: { fontSize: 14, fontWeight: '600', color: c.text },
   info: { fontSize: 14, color: c.primaryDark },
+  kindRow: { gap: spacing.sm, paddingVertical: spacing.xs },
+  locRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: 52,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderColor: c.border,
+    borderRadius: radius.md,
+  },
+  locBody: { flex: 1 },
+  locName: { fontSize: 16, fontWeight: '700', color: c.text },
+  locCount: { fontSize: 13, color: c.textMuted },
   catBlock: { gap: spacing.sm, paddingTop: spacing.sm },
   catName: { fontSize: 15, fontWeight: '700', color: c.text },
   explain: { fontSize: 13, color: c.textMuted, lineHeight: 19 },

@@ -36,6 +36,9 @@ function RootNavigator() {
         <Stack.Screen name="add" options={{ presentation: 'modal', headerShown: true, title: t.add.title }} />
         <Stack.Screen name="item/[id]" options={{ headerShown: true, title: t.item.title }} />
         <Stack.Screen name="item/edit/[id]" options={{ headerShown: true, title: t.edit.title }} />
+        <Stack.Screen name="item/move/[id]" options={{ headerShown: true, title: t.move.title }} />
+        <Stack.Screen name="locations/new" options={{ headerShown: true, title: t.locations.newTitle }} />
+        <Stack.Screen name="locations/[id]" options={{ headerShown: true, title: t.locations.editTitle }} />
       </Stack.Protected>
     </Stack>
   );

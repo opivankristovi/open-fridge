@@ -50,7 +50,7 @@ npm install
 ### 3. Set up Supabase
 
 1. In Supabase, create a new project. Pick any name and region, and save the database password somewhere safe.
-2. Open **SQL Editor** in the left menu. Open the file `supabase/migrations/0001_init.sql` from this repository, copy all of it, paste it into the editor and click **Run**. Do this once. It creates the tables, the security rules and the private `photos` storage bucket.
+2. Open **SQL Editor** in the left menu. Open the file `supabase/migrations/0001_init.sql` from this repository, copy all of it, paste it into the editor and click **Run**. Do this once. It creates the tables, the security rules and the private `photos` storage bucket. Then do the same with `supabase/migrations/0002_storage_locations.sql`: it adds storage locations (several fridges, freezers, pantries, cellars and so on). If you already have an installation from before this feature, run only `0002_storage_locations.sql`; your existing items are kept and placed in a fridge. Install the new app version on **every** phone of the household before anyone uses the new categories (dry goods, canned & jarred, bread & bakery, ready meals, snacks & sweets): older app versions crash on items in those categories.
 3. Go to **Authentication**, then **Sign In / Providers**, then **Email**, and turn **off** "Confirm email". The app has no screen for handling confirmation links. With the setting on, the link in the email opens `localhost` on your phone and fails. Turning it off is safe: row-level security means an account can only see the households it belongs to, so a fake email address gives access to nothing.
 4. Go to **Project Settings**, then **API Keys**, and note two values:
    - **Project URL**: the base address, like `https://xxxx.supabase.co`. Do not use the one ending in `/rest/v1/`.
@@ -137,13 +137,14 @@ For developers.
 
 ### Data model (Supabase)
 
-The schema is in `supabase/migrations/0001_init.sql`.
+The schema is in `supabase/migrations/0001_init.sql` and `supabase/migrations/0002_storage_locations.sql`.
 
 - `households`: name and invite code.
 - `household_members`: which user belongs to which household (role `owner` or `member`).
-- `items`: the products in the fridge, including status (`in_fridge`, `consumed`, `discarded`), expiry date, opened date and shelf-life days.
+- `storage_locations`: the places where food is kept (fridge, freezer, pantry, cellar, storage room, other). Every item in stock lives in exactly one location.
+- `items`: the products in stock, each in a storage location, including status (`in_fridge`, `consumed`, `discarded`), expiry date, opened date and shelf-life days.
 - `household_products`: a shared memory of products by barcode.
-- `household_settings`: per-household category defaults, stored as JSON.
+- `household_settings`: per-household shelf-life defaults per kind of storage location and category, stored as JSON.
 
 Security:
 

@@ -11,6 +11,7 @@ import {
   useDeleteItem,
   useHouseholdSettings,
   useItem,
+  useLocations,
   useMarkOpened,
   useMembers,
   useProduct,
@@ -18,15 +19,17 @@ import {
 } from '../../data/hooks';
 import { usePrefs } from '../../data/localPrefs';
 import { setProductOpenedDays } from '../../data/productsRepo';
-import { CATEGORIES, categoryLabel, shelfDefaults } from '../../domain/categories';
+import { CATEGORIES, categoryLabel } from '../../domain/categories';
 import {
-  daysInFridge,
+  daysInHouse,
   daysLeft,
   daysOpen,
   effectiveExpiry,
   expiryStatus,
 } from '../../domain/expiry';
 import { formatLongDate, formatShortDate } from '../../domain/format';
+import { locationLabel } from '../../domain/locations';
+import { shelfDefaults } from '../../domain/shelfLife';
 import { t } from '../../i18n';
 import { errorMessage } from '../../lib/errors';
 import { makeStyles, spacing } from '../../theme';
@@ -37,6 +40,7 @@ export default function ItemDetailScreen() {
   const item = useItem(id);
   const members = useMembers();
   const settings = useHouseholdSettings();
+  const locations = useLocations();
   const product = useProduct(item.data?.barcode);
   const { prefs } = usePrefs();
   const insets = useSafeAreaInsets();
@@ -51,13 +55,21 @@ export default function ItemDetailScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const data = item.data;
-  const categoryOpened = data ? shelfDefaults(data.category, settings.data?.category_defaults).opened : 3;
-  const defaultOpenDays = data ? (product.data?.last_opened_shelf_days ?? categoryOpened) : 3;
+  const allLocations = locations.data ?? [];
+  const location = allLocations.find((l) => l.id === data?.location_id);
+  const kind = location?.kind ?? 'fridge';
+  const categoryOpened = data ? shelfDefaults(kind, data.category, settings.data?.shelf_defaults).opened : 3;
+  // What the household learned about opened shelf life only applies to fridges.
+  const defaultOpenDays = data
+    ? kind === 'fridge'
+      ? (product.data?.last_opened_shelf_days ?? categoryOpened)
+      : categoryOpened
+    : 3;
   useEffect(() => {
     setOpenDays(defaultOpenDays);
   }, [defaultOpenDays]);
 
-  if (item.isPending) return <Spinner />;
+  if (item.isPending || locations.isPending) return <Spinner />;
 
   if (!data || data.status !== 'in_fridge') {
     // Missing, or removed (possibly by someone else in the meantime). Stay quiet while we leave ourselves.
@@ -97,7 +109,7 @@ export default function ItemDetailScreen() {
   const confirmOpened = () =>
     run(async () => {
       await markOpened.mutateAsync({ id: data.id, shelfDays: openDays });
-      if (data.barcode) {
+      if (data.barcode && kind === 'fridge') {
         await setProductOpenedDays(data.household_id, data.barcode, openDays).catch(() => undefined);
       }
       setShowOpen(false);
@@ -121,7 +133,9 @@ export default function ItemDetailScreen() {
         <Text style={styles.name}>{data.name}</Text>
         {data.brand ? <Text style={styles.brand}>{data.brand}</Text> : null}
         <Text style={styles.meta}>
-          {categoryLabel(data.category)} · {t.item.quantity(data.quantity)}
+          {categoryLabel(data.category)}
+          {allLocations.length >= 2 && location ? ` · ${locationLabel(location)}` : ''} ·{' '}
+          {t.item.quantity(data.quantity)}
         </Text>
       </View>
 
@@ -132,7 +146,7 @@ export default function ItemDetailScreen() {
         </Text>
         {eff ? <Text style={styles.meta}>{t.item.ruleSource[eff.rule]}</Text> : null}
         <Text style={styles.meta}>
-          {t.item.addedBy(formatShortDate(data.added_at), adder, t.days(daysInFridge(data)))}
+          {t.item.addedBy(formatShortDate(data.added_at), adder, t.days(daysInHouse(data)))}
         </Text>
         {data.opened_at && opened !== null ? (
           <Text style={styles.meta}>
@@ -175,6 +189,14 @@ export default function ItemDetailScreen() {
           />
         </View>
       </View>
+      {allLocations.length >= 2 ? (
+        <Button
+          title={t.move.action}
+          variant="outline"
+          disabled={busy}
+          onPress={() => router.push({ pathname: '/item/move/[id]', params: { id: data.id } })}
+        />
+      ) : null}
       <Button
         title={t.item.edit}
         variant="outline"

@@ -1,3 +1,4 @@
+import type { ShelfOverrides } from '../domain/shelfLife';
 import { supabase } from '../lib/supabase';
 import type { HouseholdMember, HouseholdSettings, MyMembership } from '../types/db';
 
@@ -48,20 +49,20 @@ export async function listMembers(householdId: string): Promise<HouseholdMember[
 export async function getHouseholdSettings(householdId: string): Promise<HouseholdSettings | null> {
   const { data, error } = await supabase
     .from('household_settings')
-    .select('household_id, category_defaults')
+    .select('household_id, shelf_defaults')
     .eq('household_id', householdId)
     .maybeSingle();
   if (error) throw error;
   return (data as HouseholdSettings | null) ?? null;
 }
 
-export async function updateCategoryDefaults(
+export async function updateShelfDefaults(
   householdId: string,
-  defaults: HouseholdSettings['category_defaults'],
+  shelf: ShelfOverrides,
 ): Promise<void> {
   const { error } = await supabase
     .from('household_settings')
-    .update({ category_defaults: defaults })
+    .update({ shelf_defaults: shelf })
     .eq('household_id', householdId);
   if (error) throw error;
 }

@@ -7,10 +7,12 @@ const now = new Date(2026, 10, 17, 10, 0); // 17 nov 2026, 10:00 local
 const prefs = { warnDays: 2, notifyHour: 9 };
 
 function item(id: string, name: string, p: Partial<ScheduleItem> = {}): ScheduleItem {
+  const added_at = p.added_at ?? new Date(2026, 10, 15, 12, 0).toISOString();
   return {
     id,
     name,
-    added_at: new Date(2026, 10, 15, 12, 0).toISOString(),
+    added_at,
+    stored_at: added_at,
     expiry_date: null,
     opened_at: null,
     opened_shelf_days: null,

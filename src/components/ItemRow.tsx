@@ -2,19 +2,20 @@ import { router } from 'expo-router';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { daysInFridge, daysOpen, type ExpiryStatus } from '../domain/expiry';
+import { daysInHouse, daysOpen, type ExpiryStatus } from '../domain/expiry';
 import { t } from '../i18n';
 import { makeStyles, radius, spacing } from '../theme';
 import type { Item } from '../types/db';
 import { ItemImage } from './ItemImage';
 import { StatusBadge } from './StatusBadge';
 
-type Props = { item: Item; status: ExpiryStatus; daysLeft: number | null };
+type Props = { item: Item; status: ExpiryStatus; daysLeft: number | null; locationName?: string };
 
-function ItemRowBase({ item, status, daysLeft }: Props) {
+function ItemRowBase({ item, status, daysLeft, locationName }: Props) {
   const styles = useStyles();
   const open = daysOpen(item);
-  const parts = [t.fridge.inFridge(daysInFridge(item))];
+  const parts = locationName ? [locationName] : [];
+  parts.push(t.fridge.inHouse(daysInHouse(item)));
   if (open !== null) parts.push(t.fridge.open(open));
   if (item.quantity > 1) parts.push(`×${item.quantity}`);
 

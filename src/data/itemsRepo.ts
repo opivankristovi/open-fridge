@@ -15,6 +15,8 @@ export type ItemPatch = Partial<
     | 'category'
     | 'quantity'
     | 'added_at'
+    | 'location_id'
+    | 'stored_at'
     | 'expiry_date'
     | 'opened_at'
     | 'opened_shelf_days'
@@ -35,6 +37,9 @@ export type NewItemInput = {
   photo_path?: string | null;
   image_url?: string | null;
   category: CategoryKey;
+  location_id: string;
+  /** Defaults to now() in the database. */
+  stored_at?: string;
   quantity?: number;
   expiry_date?: string | null;
   opened_at?: string | null;
@@ -42,7 +47,7 @@ export type NewItemInput = {
   fresh_shelf_days?: number | null;
 };
 
-export async function listInFridge(hid: string): Promise<Item[]> {
+export async function listInStock(hid: string): Promise<Item[]> {
   const { data, error } = await supabase
     .from('items')
     .select('*')
@@ -83,6 +88,14 @@ export async function updateItem(id: string, patch: ItemPatch): Promise<Item> {
   const { data, error } = await supabase.from('items').update(patch).eq('id', id).select('*').single();
   if (error) throw error;
   return data as Item;
+}
+
+/** Move an item to another location (and optionally restart its shelf-life clock). */
+export async function moveItem(
+  id: string,
+  patch: Pick<ItemPatch, 'location_id' | 'stored_at' | 'expiry_date' | 'fresh_shelf_days' | 'opened_shelf_days'>,
+): Promise<Item> {
+  return updateItem(id, patch);
 }
 
 export async function markOpened(id: string, shelfDays: number | null): Promise<Item> {

@@ -3,36 +3,44 @@ import { subDays } from 'date-fns';
 
 import { useAuth } from '../auth/AuthProvider';
 import { requestResync } from '../services/notifications';
-import type { HouseholdSettings } from '../types/db';
+import type { ShelfOverrides } from '../domain/shelfLife';
+import type { LocationKind } from '../types/db';
 import {
   getHouseholdSettings,
   listMembers,
-  updateCategoryDefaults,
+  updateShelfDefaults,
 } from './householdRepo';
 import {
   createItem,
   deleteItem,
   getItem,
-  listInFridge,
+  listInStock,
   listRemovedSince,
   markOpened,
+  moveItem,
   removeItem,
   restoreItem,
   updateItem,
   type ItemPatch,
   type NewItemInput,
 } from './itemsRepo';
+import {
+  createLocation,
+  deleteLocation,
+  listLocations,
+  updateLocation,
+} from './locationsRepo';
 import { getProduct } from './productsRepo';
 
 export function useHouseholdId(): string | null {
   return useAuth().household?.id ?? null;
 }
 
-export function useFridgeItems() {
+export function useStockItems() {
   const hid = useHouseholdId();
   return useQuery({
-    queryKey: ['items', hid, 'fridge'],
-    queryFn: () => listInFridge(hid as string),
+    queryKey: ['items', hid, 'stock'],
+    queryFn: () => listInStock(hid as string),
     enabled: !!hid,
   });
 }
@@ -83,13 +91,56 @@ export function useProduct(barcode: string | null | undefined) {
   });
 }
 
-export function useUpdateCategoryDefaults() {
+export function useUpdateShelfDefaults() {
   const hid = useHouseholdId();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (defaults: HouseholdSettings['category_defaults']) =>
-      updateCategoryDefaults(hid as string, defaults),
+    mutationFn: (shelf: ShelfOverrides) => updateShelfDefaults(hid as string, shelf),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['settings', hid] }),
+  });
+}
+
+export function useLocations() {
+  const hid = useHouseholdId();
+  return useQuery({
+    queryKey: ['locations', hid],
+    queryFn: () => listLocations(hid as string),
+    enabled: !!hid,
+  });
+}
+
+export function useCreateLocation() {
+  const hid = useHouseholdId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { name: string | null; kind: LocationKind }) =>
+      createLocation({ household_id: hid as string, ...input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['locations', hid] }),
+  });
+}
+
+export function useUpdateLocation() {
+  const hid = useHouseholdId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: { name?: string | null; kind?: LocationKind } }) =>
+      updateLocation(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['locations', hid] }),
+  });
+}
+
+export function useDeleteLocation() {
+  const hid = useHouseholdId();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, moveTo }: { id: string; moveTo: string | null }) => deleteLocation(id, moveTo),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['locations', hid] }),
+        qc.invalidateQueries({ queryKey: ['items', hid] }),
+      ]);
+      requestResync();
+    },
   });
 }
 
@@ -112,6 +163,15 @@ export function useUpdateItem() {
   const after = useAfterItemChange();
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: ItemPatch }) => updateItem(id, patch),
+    onSuccess: after,
+  });
+}
+
+export function useMoveItem() {
+  const after = useAfterItemChange();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof moveItem>[1] }) =>
+      moveItem(id, patch),
     onSuccess: after,
   });
 }

@@ -19,6 +19,33 @@ export function useRealtimeItems(hid: string | null | undefined) {
         { event: '*', schema: 'public', table: 'items', filter: `household_id=eq.${hid}` },
         () => {
           queryClient.invalidateQueries({ queryKey: ['items', hid] });
+          // a location delete that moved items only shows up here as item updates
+          queryClient.invalidateQueries({ queryKey: ['locations', hid] });
+          requestResync();
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'storage_locations' },
+        () => {
+          // DELETE events cannot be filtered and carry only the id: just refetch our list
+          queryClient.invalidateQueries({ queryKey: ['locations', hid] });
+          queryClient.invalidateQueries({ queryKey: ['items', hid] });
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'storage_locations', filter: `household_id=eq.${hid}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['locations', hid] });
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'storage_locations', filter: `household_id=eq.${hid}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['locations', hid] });
+          queryClient.invalidateQueries({ queryKey: ['items', hid] });
           requestResync();
         },
       )

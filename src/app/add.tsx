@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { randomUUID } from 'expo-crypto';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, BackHandler, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../auth/AuthProvider';
 import { CategoryChips } from '../components/CategoryChips';
+import { LocationChips } from '../components/LocationChips';
 import {
   defaultExpiryValue,
   ExpiryForm,
@@ -17,9 +18,12 @@ import {
 import { PhotoCapture } from '../components/PhotoCapture';
 import { Stepper } from '../components/Stepper';
 import { Button, ErrorText, Field, Spinner } from '../components/ui';
-import { useCreateItem, useHouseholdSettings } from '../data/hooks';
+import { useCreateItem, useHouseholdSettings, useLocations } from '../data/hooks';
+import { usePrefs } from '../data/localPrefs';
 import { getProduct, upsertProduct } from '../data/productsRepo';
-import { shelfDefaults, type CategoryKey } from '../domain/categories';
+import type { CategoryKey } from '../domain/categories';
+import { defaultLocation, type LocationKind } from '../domain/locations';
+import { shelfDefaults } from '../domain/shelfLife';
 import { errorMessage } from '../lib/errors';
 import { t } from '../i18n';
 import { ensurePermission } from '../services/notifications';
@@ -41,6 +45,9 @@ export default function AddScreen() {
   const hid = household?.id as string;
   const settings = useHouseholdSettings();
   const createItem = useCreateItem();
+  const locationsQuery = useLocations();
+  const { prefs, update: updatePrefs } = usePrefs();
+  const { locationId: locationParam } = useLocalSearchParams<{ locationId?: string }>();
 
   const [step, setStep] = useState<Step>('scan');
   const [permission, requestPermission] = useCameraPermissions();
@@ -59,8 +66,22 @@ export default function AddScreen() {
 
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [expiry, setExpiry] = useState<ExpiryValue | null>(null);
-  const [expiryCategory, setExpiryCategory] = useState<CategoryKey | null>(null);
+  const [expiryKey, setExpiryKey] = useState<string | null>(null);
+  const [pickedLocation, setPickedLocation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // --- location: picked chip, else route param, else last used, else the default -----------------
+  const locations = locationsQuery.data ?? [];
+  const multi = locations.length >= 2;
+  const validId = (id: string | null | undefined) =>
+    id && locations.some((l) => l.id === id) ? id : null;
+  const locationId =
+    validId(pickedLocation) ??
+    validId(locationParam) ??
+    validId(prefs.lastLocationId) ??
+    defaultLocation(locations)?.id ??
+    null;
+  const kind: LocationKind = locations.find((l) => l.id === locationId)?.kind ?? 'fridge';
 
   // --- barcode lookup: household memory first, then Open Food Facts -------------------------
   const lookupToken = useRef(0);
@@ -164,21 +185,24 @@ export default function AddScreen() {
 
   const toExpiry = (uri: string | null) => {
     setPhotoUri(uri);
-    const overrides = settings.data?.category_defaults;
+    const overrides = settings.data?.shelf_defaults;
+    // What the household learned about opened shelf life only applies to fridges.
+    const learned = kind === 'fridge' ? lastOpenedDays : null;
+    const key = `${kind}:${category}`;
     if (!expiry) {
-      setExpiry(defaultExpiryValue(category, overrides, lastOpenedDays));
-    } else if (expiryCategory !== category) {
-      // Category changed after the form was first shown: refresh only the shelf-life defaults.
-      const d = shelfDefaults(category, overrides);
-      setExpiry({ ...expiry, freshDays: d.fresh, openedDays: lastOpenedDays ?? d.opened });
+      setExpiry(defaultExpiryValue(kind, category, overrides, learned));
+    } else if (expiryKey !== key) {
+      // Category or location kind changed after the form was first shown: refresh only the shelf-life defaults.
+      const d = shelfDefaults(kind, category, overrides);
+      setExpiry({ ...expiry, freshDays: d.fresh, openedDays: learned ?? d.opened });
     }
-    setExpiryCategory(category);
+    setExpiryKey(key);
     setStep('expiry');
   };
 
   // --- save ---------------------------------------------------------------------------------
   const save = async () => {
-    if (!expiry) return;
+    if (!expiry || !locationId) return;
     setError(null);
     setStep('save');
     const id = randomUUID();
@@ -206,6 +230,7 @@ export default function AddScreen() {
           image_url: imageUrl,
           category,
           quantity,
+          location_id: locationId,
           ...fields,
         });
       } catch (e) {
@@ -220,9 +245,10 @@ export default function AddScreen() {
           brand: cleanBrand,
           image_url: imageUrl,
           category,
-          ...(fields.opened_at ? { last_opened_shelf_days: fields.opened_shelf_days } : {}),
+          ...(fields.opened_at && kind === 'fridge' ? { last_opened_shelf_days: fields.opened_shelf_days } : {}),
         }).catch(() => undefined);
       }
+      void updatePrefs({ lastLocationId: locationId });
       if (photoFailed) {
         Alert.alert(t.add.photoFailedTitle, t.add.photoFailed, [{ text: t.common.ok, onPress: () => router.back() }]);
       } else {
@@ -308,6 +334,16 @@ export default function AddScreen() {
             <Field label={t.add.brand} value={brand} onChangeText={setBrand} autoCapitalize="words" />
             <Text style={styles.label}>{t.add.category}</Text>
             <CategoryChips value={category} onChange={(cat) => cat && setCategory(cat)} />
+            {multi ? (
+              <>
+                <Text style={styles.label}>{t.locations.label}</Text>
+                <LocationChips
+                  locations={locations}
+                  value={locationId}
+                  onChange={(id) => id && setPickedLocation(id)}
+                />
+              </>
+            ) : null}
             <Text style={styles.label}>{t.add.quantity}</Text>
             <Stepper value={quantity} min={1} max={999} onChange={setQuantity} />
             <Button title={t.add.next} onPress={toPhoto} />
@@ -323,9 +359,14 @@ export default function AddScreen() {
 
       {step === 'expiry' || step === 'save' ? (
         <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-          {expiry ? <ExpiryForm value={expiry} onChange={setExpiry} category={category} /> : null}
+          {expiry ? <ExpiryForm value={expiry} onChange={setExpiry} category={category} kind={kind} /> : null}
           <ErrorText message={error} />
-          <Button title={step === 'save' ? t.add.saving : t.add.save} onPress={save} loading={step === 'save'} />
+          <Button
+            title={step === 'save' ? t.add.saving : t.add.save}
+            onPress={save}
+            loading={step === 'save'}
+            disabled={!locationId}
+          />
         </ScrollView>
       ) : null}
     </View>

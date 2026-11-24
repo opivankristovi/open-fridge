@@ -5,7 +5,9 @@ import { AppState } from 'react-native';
 
 import { t } from '../i18n';
 import { getPrefs } from '../data/localPrefs';
-import { listInFridge } from '../data/itemsRepo';
+import { listInStock } from '../data/itemsRepo';
+import { listLocations } from '../data/locationsRepo';
+import { locationLabel } from '../domain/locations';
 import { buildSchedule } from './schedule';
 
 export { buildSchedule } from './schedule';
@@ -56,8 +58,21 @@ export async function ensurePermission(): Promise<boolean> {
 async function doResync(hid: string): Promise<void> {
   const current = await Notifications.getPermissionsAsync();
   if (!current.granted) return;
-  const [prefs, items] = await Promise.all([getPrefs(), listInFridge(hid)]);
-  const entries = buildSchedule(items, prefs, new Date());
+  const [prefs, items, locations] = await Promise.all([
+    getPrefs(),
+    listInStock(hid),
+    listLocations(hid),
+  ]);
+  // With several locations, say where the product is in the notification text.
+  const byId = new Map(locations.map((l) => [l.id, l]));
+  const named =
+    locations.length >= 2
+      ? items.map((item) => {
+          const loc = item.location_id ? byId.get(item.location_id) : undefined;
+          return loc ? { ...item, name: t.notifications.withLocation(item.name, locationLabel(loc)) } : item;
+        })
+      : items;
+  const entries = buildSchedule(named, prefs, new Date());
   // Only cancel expiry notifications (they carry an itemId), so e.g. a pending
   // test notification survives a resync.
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();

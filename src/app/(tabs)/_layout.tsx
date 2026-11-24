@@ -50,7 +50,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: t.tabs.fridge,
-          tabBarIcon: ({ color, size }) => <Ionicons name="snow-outline" size={size} color={color as string} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="file-tray-full-outline" size={size} color={color as string} />,
         }}
       />
       <Tabs.Screen

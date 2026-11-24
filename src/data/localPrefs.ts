@@ -4,9 +4,23 @@ import { useCallback, useEffect, useState } from 'react';
 
 export type ThemePref = 'system' | 'light' | 'dark';
 
-export type Prefs = { warnDays: number; notifyHour: number; theme: ThemePref };
+export type Prefs = {
+  warnDays: number;
+  notifyHour: number;
+  theme: ThemePref;
+  /** Selected location chip on the stock screen; null = all. */
+  locationFilter: string | null;
+  /** Location last used when adding a product. */
+  lastLocationId: string | null;
+};
 
-export const DEFAULT_PREFS: Prefs = { warnDays: 2, notifyHour: 9, theme: 'system' };
+export const DEFAULT_PREFS: Prefs = {
+  warnDays: 2,
+  notifyHour: 9,
+  theme: 'system',
+  locationFilter: null,
+  lastLocationId: null,
+};
 
 const KEY = 'prefs.v1';
 
@@ -30,6 +44,8 @@ export async function getPrefs(): Promise<Prefs> {
         parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system'
           ? parsed.theme
           : DEFAULT_PREFS.theme,
+      locationFilter: typeof parsed.locationFilter === 'string' ? parsed.locationFilter : null,
+      lastLocationId: typeof parsed.lastLocationId === 'string' ? parsed.lastLocationId : null,
     };
   } catch {
     cache = { ...DEFAULT_PREFS };
